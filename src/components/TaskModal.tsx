@@ -15,6 +15,8 @@ import { CalendarIcon } from "lucide-react";
 import { Save, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isDateRangeWithin, calculateEstimatedHours, calculateBusinessDays } from "@/lib/business-days";
+import { Portal } from "@radix-ui/react-portal";
+
 
 interface TaskModalProps {
   task: Task | null;
@@ -123,15 +125,40 @@ export function TaskModal({
       newErrors.description = 'Description is required';
     }
 
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // const handleSave = () => {
+  //   if (!validateForm()) return;
+  //   onSave(formData);
+  //   onClose();
+  // };
+
+
   const handleSave = () => {
-    if (!validateForm()) return;
-    onSave(formData);
-    onClose();
-  };
+  if (!validateForm()) return;
+
+  // ✅ validate date range before closing
+  const selectedProject = availableProjects.find(p => p.id === formData.projectId);
+  if (
+    selectedProject &&
+    !isDateRangeWithin(
+      formData.startDate,
+      formData.endDate,
+      selectedProject.startDate,
+      selectedProject.endDate
+    )
+  ) {
+    // you already show a toast elsewhere, so just stop here
+    return; // don't close the dialog
+  }
+
+  onSave(formData);
+  onClose(); // only close if everything is valid
+};
+
 
   const canEdit = (field: keyof TaskFormData): boolean => {
     if (canEditAllFields) return true;

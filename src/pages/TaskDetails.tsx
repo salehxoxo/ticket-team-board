@@ -24,14 +24,6 @@ interface Comment {
   commentedAt: Date;
 }
 
-// interface TimeLog {
-//   id: string; 
-//   description: string;
-//   hours: number;
-//   author: UserType;
-//   createdAt: Date;
-// }
-
 interface TimeLog {
   id: string;
   taskId: string;
@@ -42,82 +34,30 @@ interface TimeLog {
   loggedAt: Date;
 }
 
-// Mock data - in real app this would come from API
-// const mockComments: Comment[] = [
-//   {
-//     id: '1',
-//     content: 'Initial task setup completed. Started working on authentication flow.',
-//     author: { id: '2', name: 'Mike Chen', role: 'developer', email: 'mike@company.com' },
-//     createdAt: new Date('2024-01-12T10:30:00')
-//   }
-// ];
-
-// const mockTimeLogs: TimeLog[] = [
-//   {
-//     id: '1',
-//     description: 'Set up authentication backend',
-//     hours: 4,
-//     author: { id: '2', name: 'Mike Chen', role: 'developer', email: 'mike@company.com' },
-//     createdAt: new Date('2024-01-12T14:00:00')
-//   }
-// ];
-
 export default function TaskDetails() {
-  const { taskId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   
 const location = useLocation();
-// const passedTask = location.state?.task as Task | undefined;
  const { task, column } = location.state as { task: Task; column: Column };
 
-// const [task, setTask] = useState<Task | undefined>(passedTask);
-  
-  // Mock task data - in real app this would be fetched by ID
-  // const [task] = useState<Task>({
-  //   id: 'TASK-001',
-  //   name: 'Implement user authentication',
-  //   description: 'Add login and registration functionality with JWT tokens and secure password hashing.',
-  //   status: 'in-progress',
-  //   priority: 'high',
-  //   reporter: { id: '1', name: 'Sarah Johnson', role: 'manager', email: 'sarah@company.com' },
-  //   assignee: { id: '2', name: 'Mike Chen', role: 'developer', email: 'mike@company.com' },
-  //   project: {
-  //     id: '1',
-  //     name: 'E-commerce Platform',
-  //     description: 'Main e-commerce platform development',
-  //     startDate: new Date('2024-01-01'),
-  //     endDate: new Date('2024-06-30'),
-  //     estimatedHours: 960,
-  //     createdAt: new Date('2024-01-01')
-  //   },
-  //   startDate: new Date('2024-01-10'),
-  //   endDate: new Date('2024-01-15'),
-  //   hours: 32,
-  //   createdAt: new Date('2024-01-10'),
-  //   updatedAt: new Date('2024-01-12')
-  // });
 
-  // const [comments, setComments] = useState<Comment[]>(mockComments);
   const [comments, setComments] = useState<Comment[]>([]);
-  // const [timeLogs, setTimeLogs] = useState<TimeLog[]>(mockTimeLogs);
    const [timeLogs, setTimeLogs] = useState<TimeLog[]>([]);
   const [newComment, setNewComment] = useState('');
   const [newTimeLog, setNewTimeLog] = useState({ description: '', hours: '' });
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [isAddingTimeLog, setIsAddingTimeLog] = useState(false);
-  
-  // const currentUser = { id: '2', name: 'Mike Chen', role: 'developer', email: 'mike@company.com' } as UserType;
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}') as UserType;
 
-  const statusConfig = {
-    'todo': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'To Do' },
-    'in-progress': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'In Progress' },
-    'review': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'In Review' },
-    'done': { bg: 'bg-green-100', text: 'text-green-800', label: 'Done' }
-  };
+  // const statusConfig = {
+  //   'todo': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'To Do' },
+  //   'in-progress': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'In Progress' },
+  //   'review': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'In Review' },
+  //   'done': { bg: 'bg-green-100', text: 'text-green-800', label: 'Done' }
+  // };
 
   const priorityConfig = {
     'low': { bg: 'bg-green-100', text: 'text-green-800', label: 'Low' },
@@ -253,30 +193,6 @@ const location = useLocation();
   } finally {
     setIsAddingTimeLog(false);
   }
-
-    // if (!newTimeLog.description.trim() || !newTimeLog.hours) return;
-    
-    // setIsAddingTimeLog(true);
-    // try {
-    //   await new Promise(resolve => setTimeout(resolve, 500));
-      
-    //   const timeLog: TimeLog = {
-    //     id: `timelog-${Date.now()}`,
-    //     description: newTimeLog.description,
-    //     hours: parseFloat(newTimeLog.hours),
-    //     author: currentUser,
-    //     createdAt: new Date()
-    //   };
-      
-    //   setTimeLogs(prev => [...prev, timeLog]);
-    //   setNewTimeLog({ description: '', hours: '' });
-    //   toast({
-    //     title: "Time logged",
-    //     description: `${timeLog.hours} hours logged successfully.`,
-    //   });
-    // } finally {
-    //   setIsAddingTimeLog(false);
-    // }
   };
 
   const totalLoggedHours = timeLogs.reduce((sum, log) => sum + log.hours, 0);

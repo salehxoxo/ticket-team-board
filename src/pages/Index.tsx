@@ -5,19 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { TaskModal } from "@/components/TaskModal";
 import { UserModal, UserFormData } from "@/components/UserModal";
 import { ProjectModal, ProjectFormData } from "@/components/ProjectModal";
 import { ProductModal, ProductFormData } from "@/components/ProductModal";
-import { UserSelector } from "@/components/UserSelector";
 import { Reports } from "@/components/Reports";
-import { TaskCard } from "@/components/TaskCard";
-import { Task, TaskFormData, User, Project, Product, TaskPriority, UserRole, Holiday, HolidayFormData, Column, KanbanColumn } from "@/types/task";
+import { Task, TaskFormData, User, Project, Product, TaskPriority, UserRole, Holiday, HolidayFormData, Column } from "@/types/task";
 import { HolidayModal } from "@/components/HolidayModal";
-import { Plus, BarChart3, Calendar, Users, TrendingUp, AlertTriangle, Eye, UserPlus, Edit, Trash2, FolderPlus, LogOut, Search } from "lucide-react";
+import { Plus, BarChart3, Calendar, Users, TrendingUp, UserPlus, Edit, Trash2, FolderPlus, LogOut, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { HttpClient } from "@/api/communicator";
 import { isDateRangeWithin } from "@/lib/business-days";
@@ -25,210 +22,181 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { TaskSidebar } from "@/components/Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-// import { Badge } from "@/components/ui/badge"
-// import { Button } from "@/components/ui/button"
-// import { Eye, Edit, Search } from "lucide-react"
-// import { Input } from "@/components/ui/input"
+import { TaskTable } from "@/components/TaskTable";
+import { UserTable } from "@/components/UserTable";
+import { ProjectTable } from "@/components/ProjectTable";
+import { ProfileModal } from "@/components/UserProfile";
+import { StatusFormData, StatusModal } from "@/components/StatusModal";
+import { StatusTable } from "@/components/StatusTable";
+import { RoleTable } from "@/components/RoleTable";
+import { RoleModal } from "@/components/RoleModal";
 
 
 
 export default function Index() {
-  // const [activeTab, setActiveTab] = useState("kanban");
   const [activeTab, setActiveTab] = useState(() => {
-  return localStorage.getItem("activeTab") || "kanban";
-});
+    return localStorage.getItem("activeTab") || "kanban";
+  });
 
-  // const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [statuses, setStatuses] = useState<Column[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
-  //  const [holidays, setHolidays] = useState<Holiday[]>(mockHolidays);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<Column | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
   const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [isCreatingStatus, setIsCreatingStatus] = useState(false);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [isCreatingHoliday, setIsCreatingHoliday] = useState(false);
   const [taskSearch, setTaskSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [projectSearch, setProjectSearch] = useState("");
-   const [productSearch, setProductSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [productSearch, setProductSearch] = useState("");
   const [savingTask, setSavingTask] = useState(false);
   const [savingUser, setSavingUser] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [savingRole, setSavingRole] = useState(false);
   const [savingProduct, setSavingProduct] = useState(false);
   const [savingHoliday, setSavingHoliday] = useState(false);
-  const [deletingUser, setDeletingUser] = useState<string | null>(null);
-  const [deletingProject, setDeletingProject] = useState<string | null>(null);
-  const [deletingProduct, setDeletingProduct] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [isCreatingRole, setIsCreatingRole] = useState(false);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [columns, setColumns] = useState<Column[]>([]);
+  const [open, setOpen] = useState(false);
+
 
 
   // whenever tab changes, save it
-const handleTabChange = (tab: string) => {
-  setActiveTab(tab);
-  localStorage.setItem("activeTab", tab);
-};
-
-useEffect(() => {
-  
-  const fetchData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const userString = localStorage.getItem('user');
- 
-      if (!token || !userString) {
-        console.warn("User not logged in");
-        return;
-      }
-
-      const user = JSON.parse(userString);
-      setCurrentUser(user);
-
-
-      // Fetch tasks by user ID
-      const response = await HttpClient.GET<Task[]>(`/api/Tasks/user/${user.id}`);
-
-      if (!response.isError && response.data) {
-        // setTasks(response.data);
-        const convertedTasks = response.data.map(task => ({
-          ...task,
-          startDate: new Date(task.startDate),
-          endDate: new Date(task.endDate),
-          created_at: new Date(task.created_at),
-          updated_at: new Date(task.updated_at),
-          project_start: new Date(task.project_start),
-          project_end: new Date(task.project_end)
-        }));
-
-        setTasks(convertedTasks);
-      } else {
-        console.error("Failed to fetch tasks:", response.message);
-      }
-
-
-      // Fetch all users
-      const userResponse = await HttpClient.GET<User[]>('/api/User');
-
-      if (!userResponse.isError && userResponse.data) {
-        setUsers(userResponse.data);
-      } else {
-        console.error("Failed to fetch users:", userResponse.message);
-      }
-
-      // Fetch all projects
-      const projectResponse = await HttpClient.GET<Project[]>('/api/Project');
-
-      if (!projectResponse.isError && projectResponse.data) {
-        // setProjects(projectResponse.data);
-        const convertedProjects = projectResponse.data.map(project => ({
-          ...project,
-          startDate: new Date(project.startDate),
-          endDate: new Date(project.endDate),
-          createdAt: new Date(project.createdAt)
-        }));
-
-        setProjects(convertedProjects);
-      } else {
-        // console.error("Failed to fetch users:", projectResponse.message);
-        console.error("Failed to fetch projects:", projectResponse.message);
-      }
-
-      // Fetch all roles
-      const roleResponse = await HttpClient.GET<UserRole[]>('/api/Role');
-
-      if (!roleResponse.isError && roleResponse.data) {
-        setRoles(roleResponse.data);
-      } else {
-        console.error("Failed to fetch users:", roleResponse.message);
-      }
-
-      // setHolidays(mockHolidays);
-      // Fetch all holidays
-      const holidayResponse = await HttpClient.GET<Holiday[]>('/api/Holiday');
-
-      if (!holidayResponse.isError && holidayResponse.data) {
-        // setProjects(projectResponse.data);
-        const convertedHolidays = holidayResponse.data.map(holiday => ({
-          ...holiday,
-          date: new Date(holiday.date),
-        }));
-
-        setHolidays(convertedHolidays);
-      } else {
-        // console.error("Failed to fetch users:", projectResponse.message);
-        console.error("Failed to fetch holidays:", holidayResponse.message);
-      }
-
-      // Fetch all products
-      const productResponse = await HttpClient.GET<Product[]>('/api/Product');
-
-      if (!productResponse.isError && productResponse.data) {
-        // setProjects(projectResponse.data);
-        // const convertedHolidays = holidayResponse.data.map(holiday => ({
-        //   ...holiday,
-        //   date: new Date(holiday.date),
-        // }));
-
-        setProducts(productResponse.data);
-      } else {
-        // console.error("Failed to fetch users:", projectResponse.message);
-        console.error("Failed to fetch products:", productResponse.message);
-      }
-
-
-      //fetch all statuses
-      const statusresponse = await HttpClient.GET<Column[]>("/api/TasksStatus");
-      
-          if (!response.isError && response.data) {
-            // Map backend Column -> frontend format
-            // const mapped = statusresponse.data.map((col) => ({
-            //   status: col.name as string,     // matches your Task.status field
-            //   title: col.name,                   // use name as title (or prettify it if needed)
-            //   description: col.description ?? "", // fallback to empty if null
-            //   color: col.color || "bg-gray-500", // default color if not provided
-            // }));
-      
-            // setColumns(mapped);
-            setColumns(statusresponse.data);
-          } else {
-            console.error("Failed to fetch task statuses:", statusresponse.message);
-          }
-
-
-    } catch (err) {
-      console.error("Error fetching data:", err);
-    }
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    localStorage.setItem("activeTab", tab);
   };
 
-  fetchData();
-}, []);
+  useEffect(() => {
+
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userString = localStorage.getItem('user');
+
+        if (!token || !userString) {
+          console.warn("User not logged in");
+          return;
+        }
+
+        const user = JSON.parse(userString);
+        setCurrentUser(user);
+
+
+        // Fetch tasks by user ID
+        const response = await HttpClient.GET<Task[]>(`/api/Tasks/user/${user.id}`);
+        if (!response.isError && response.data) {
+          const convertedTasks = response.data.map(task => ({
+            ...task,
+            startDate: new Date(task.startDate),
+            endDate: new Date(task.endDate),
+            created_at: new Date(task.created_at),
+            updated_at: new Date(task.updated_at),
+            project_start: new Date(task.project_start),
+            project_end: new Date(task.project_end)
+          }));
+          setTasks(convertedTasks);
+        } else {
+          console.error("Failed to fetch tasks:", response.message);
+        }
+
+
+        // Fetch all users
+        const userResponse = await HttpClient.GET<User[]>('/api/User');
+        if (!userResponse.isError && userResponse.data) {
+          setUsers(userResponse.data);
+        } else {
+          console.error("Failed to fetch users:", userResponse.message);
+        }
+
+
+        // Fetch all projects
+        const projectResponse = await HttpClient.GET<Project[]>('/api/Project');
+        if (!projectResponse.isError && projectResponse.data) {
+          const convertedProjects = projectResponse.data.map(project => ({
+            ...project,
+            startDate: new Date(project.startDate),
+            endDate: new Date(project.endDate),
+            createdAt: new Date(project.createdAt)
+          }));
+          setProjects(convertedProjects);
+        } else {
+          console.error("Failed to fetch projects:", projectResponse.message);
+        }
+
+        // Fetch all roles
+        const roleResponse = await HttpClient.GET<UserRole[]>('/api/Role');
+        if (!roleResponse.isError && roleResponse.data) {
+          setRoles(roleResponse.data);
+        } else {
+          console.error("Failed to fetch users:", roleResponse.message);
+        }
+
+        // Fetch all holidays
+        const holidayResponse = await HttpClient.GET<Holiday[]>('/api/Holiday');
+        if (!holidayResponse.isError && holidayResponse.data) {
+          const convertedHolidays = holidayResponse.data.map(holiday => ({
+            ...holiday,
+            date: new Date(holiday.date),
+          }));
+          setHolidays(convertedHolidays);
+        } else {
+          console.error("Failed to fetch holidays:", holidayResponse.message);
+        }
+
+
+        // Fetch all products
+        const productResponse = await HttpClient.GET<Product[]>('/api/Product');
+        if (!productResponse.isError && productResponse.data) {
+          setProducts(productResponse.data);
+        } else {
+          console.error("Failed to fetch products:", productResponse.message);
+        }
+
+
+        //fetch all statuses
+        const statusresponse = await HttpClient.GET<Column[]>("/api/TasksStatus");
+        if (!statusresponse.isError && statusresponse.data) {
+          setStatuses(statusresponse.data);
+        } else {
+          console.error("Failed to fetch task statuses:", statusresponse.message);
+        }
+
+
+
+
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    };
+
+    fetchData();
+  }, [refreshKey]);
 
 
   const taskStats = useMemo(() => {
@@ -237,7 +205,7 @@ useEffect(() => {
       acc[task.status] = (acc[task.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     const byPriority = tasks.reduce((acc, task) => {
       acc[task.priority] = (acc[task.priority] || 0) + 1;
       return acc;
@@ -253,7 +221,7 @@ useEffect(() => {
   }, [tasks]);
 
   const filteredTasks = useMemo(() => {
-    return tasks.filter(task => 
+    return tasks.filter(task =>
       task.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
       task.description.toLowerCase().includes(taskSearch.toLowerCase()) ||
       task.id.toLowerCase().includes(taskSearch.toLowerCase())
@@ -261,7 +229,7 @@ useEffect(() => {
   }, [tasks, taskSearch]);
 
   const filteredUsers = useMemo(() => {
-    return users.filter(user => 
+    return users.filter(user =>
       user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
       user.email.toLowerCase().includes(userSearch.toLowerCase()) ||
       user.role.toLowerCase().includes(userSearch.toLowerCase())
@@ -269,154 +237,122 @@ useEffect(() => {
   }, [users, userSearch]);
 
   const filteredProjects = useMemo(() => {
-    return projects.filter(project => 
+    return projects.filter(project =>
       project.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
       project.description.toLowerCase().includes(projectSearch.toLowerCase())
     );
   }, [projects, projectSearch]);
 
-   const filteredProducts = useMemo(() => {
-    return products.filter(product => 
+  const filteredProducts = useMemo(() => {
+    return products.filter(product =>
       product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
       product.description.toLowerCase().includes(productSearch.toLowerCase())
     );
   }, [products, productSearch]);
 
   const handleCreateTask = () => {
-  if (!['manager', 'admin'].includes(currentUser.role)) {
-    toast({
-      title: "Access Denied",
-      description: "Only managers and admins can create new tasks.",
-      variant: "destructive"
-    });
-    return;
-  }
+    if (!['manager', 'admin'].includes(currentUser.role)) {
+      toast({
+        title: "Access Denied",
+        description: "Only managers and admins can create new tasks.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  setSelectedTask(null);
-  setIsCreatingTask(true);
-  setIsTaskModalOpen(true);
+    setSelectedTask(null);
+    setIsCreatingTask(true);
+    setIsTaskModalOpen(true);
   };
 
-    const statusMap: Record<string, number> = {
-  'todo': 1,
-  'in-progress': 2,
-  'review': 3,
-  'done': 4
-};
-
-const priorityMap: Record<TaskPriority, number> = {
-  'low': 1,
-  'medium': 2,
-  'high': 3,
-  'urgent': 4
-};
+  const priorityMap: Record<TaskPriority, number> = {
+    'low': 1,
+    'medium': 2,
+    'high': 3,
+    'urgent': 4
+  };
 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
 
     const draggedTask = tasks.find(t => t.id === taskId);
 
-      const updatedTask = {
+    const updatedTask = {
       id: draggedTask.id,
       title: draggedTask.name,
       description: draggedTask.description,
-      // status_Id: statusMap[newStatus],
-      status_Id: columns.find((col) => col.name === newStatus)?.id,
+      status_Id: statuses.find((col) => col.name === newStatus)?.id,
       priority_Id: priorityMap[draggedTask.priority],
       project_Id: draggedTask.projectId,
       assignee_Id: draggedTask.assigneeId,
       startDate: draggedTask.startDate,
       endDate: draggedTask.endDate,
       estimatedHours: draggedTask.estimatedHours,
-      };
-      const response = await HttpClient.PUT<Task>(`/api/Tasks/${taskId}`, updatedTask);
+    };
+    const response = await HttpClient.PUT<Task>(`/api/Tasks/${taskId}`, updatedTask);
 
-      if (!response.isError && response.data) {
-        const updateTask = {
-          ...response.data,
-          startDate: new Date(response.data.startDate),
-          endDate: new Date(response.data.endDate),
-          created_at: new Date(response.data.created_at),
-          updated_at: new Date(response.data.updated_at),
-          project_start: new Date(response.data.project_start),
-          project_end: new Date(response.data.project_end)
-        };
-      // setTasks(prev =>
-      //   prev.map(task => task.id === response.data!.id ? response.data! : task)
-      // );
+    if (!response.isError && response.data) {
+      const updateTask = {
+        ...response.data,
+        startDate: new Date(response.data.startDate),
+        endDate: new Date(response.data.endDate),
+        created_at: new Date(response.data.created_at),
+        updated_at: new Date(response.data.updated_at),
+        project_start: new Date(response.data.project_start),
+        project_end: new Date(response.data.project_end)
+      };
       setTasks(prev =>
-        // prev.map(task => task.id === response.data!.id ? response.data! : task)
         prev.map(task => task.id === updateTask.id ? updateTask : task)
       );
       toast({
         title: "Task updated successfully",
         description: `"${updateTask.name}" has been updated.`,
       });
-      }
-
-
-  // setTasks((prev) =>
-  //   prev.map((task) =>
-  //     task.id === taskId ? { ...task, status: newStatus } : task
-  //   )
-  // );
-};
-
+    }
+  };
 
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
     setIsCreatingTask(false);
     setIsTaskModalOpen(true);
-    // window.location.href = `/task/${task.id}`;
-
-    // navigate(`/task/${task.id}`, { state: { task } });
   };
 
   const handleViewTask = (task: Task) => {
-  const column = columns.find(c => c.name === task.status);
-  navigate(`/task/${task.id}`, { state: { task, column } }); // Your intended behavior
-};
-
-
-// const roleMap: Record<UserRole, number> = {
-//   'admin': 1,
-//   'manager': 2,
-//   'developer': 3
-// };
+    const column = statuses.find(c => c.name === task.status);
+    navigate(`/task/${task.id}`, { state: { task, column } }); // Your intended behavior
+  };
 
 
   const handleSaveTask = async (taskData: TaskFormData) => {
 
     console.log("handleSaveTask");
 
-    
     // Date validation
-      const selectedProject = projects.find(p => p.id === taskData.projectId);
-      if (
-        selectedProject &&
-        !isDateRangeWithin(
-          taskData.startDate,
-          taskData.endDate,
-          selectedProject.startDate,
-          selectedProject.endDate
-        )
-      ) {
-        toast({
-          title: "Invalid task dates",
-          description: `Task dates must be within project range (${format(selectedProject.startDate, "PPP")} - ${format(selectedProject.endDate, "PPP")})`,
-          variant: "destructive",
-        });
-        return;
-      }
-    
+    const selectedProject = projects.find(p => p.id === taskData.projectId);
+    if (
+      selectedProject &&
+      !isDateRangeWithin(
+        taskData.startDate,
+        taskData.endDate,
+        selectedProject.startDate,
+        selectedProject.endDate
+      )
+    ) {
+      toast({
+        title: "Invalid task dates",
+        description: `Task dates must be within project range (${format(selectedProject.startDate, "PPP")} - ${format(selectedProject.endDate, "PPP")})`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (isCreatingTask) {
       // Creating a new task
 
       const newTask = {
         title: taskData.name,
         description: taskData.description,
-        // status_Id: statusMap[taskData.status],
-        status_Id: columns.find((col) => col.name === taskData.status)?.id,
+        status_Id: statuses.find((col) => col.name === taskData.status)?.id,
         priority_Id: priorityMap[taskData.priority],
         project_Id: taskData.projectId,
         assignor_Id: currentUser.id, // the one creating the task
@@ -426,12 +362,10 @@ const priorityMap: Record<TaskPriority, number> = {
         estimatedHours: taskData.estimatedHours,
       };
 
-    
+
       const response = await HttpClient.POST<Task>('/api/Tasks', newTask);
 
       if (!response.isError && response.data) {
-        // const createdTask = response.data; // This is a complete Task
-        // const createdTask = response.data; // This is a complete Task
         const createdTask = {
           ...response.data,
           startDate: new Date(response.data.startDate),
@@ -443,26 +377,26 @@ const priorityMap: Record<TaskPriority, number> = {
         };
 
         setTasks(prev => [...prev, createdTask]); // No TS error here
-      toast({
-        title: "Task created successfully",
-        description: `"${newTask.title}" has been created.`,
-      })};
+        toast({
+          title: "Task created successfully",
+          description: `"${newTask.title}" has been created.`,
+        })
+      };
     } else if (selectedTask) {
-        console.log("Editing existing task");
+      console.log("Editing existing task");
 
 
       const updatedTask = {
-      id: selectedTask.id,
-      title: taskData.name,
-      description: taskData.description,
-      // status_Id: statusMap[taskData.status],
-      status_Id: columns.find((col) => col.name === taskData.status)?.id,
-      priority_Id: priorityMap[taskData.priority],
-      project_Id: taskData.projectId,
-      assignee_Id: taskData.assigneeId,
-      startDate: taskData.startDate,
-      endDate: taskData.endDate,
-      estimatedHours: taskData.estimatedHours,
+        id: selectedTask.id,
+        title: taskData.name,
+        description: taskData.description,
+        status_Id: statuses.find((col) => col.name === taskData.status)?.id,
+        priority_Id: priorityMap[taskData.priority],
+        project_Id: taskData.projectId,
+        assignee_Id: taskData.assigneeId,
+        startDate: taskData.startDate,
+        endDate: taskData.endDate,
+        estimatedHours: taskData.estimatedHours,
       };
       const response = await HttpClient.PUT<Task>(`/api/Tasks/${selectedTask.id}`, updatedTask);
 
@@ -476,17 +410,13 @@ const priorityMap: Record<TaskPriority, number> = {
           project_start: new Date(response.data.project_start),
           project_end: new Date(response.data.project_end)
         };
-      // setTasks(prev =>
-      //   prev.map(task => task.id === response.data!.id ? response.data! : task)
-      // );
-      setTasks(prev =>
-        // prev.map(task => task.id === response.data!.id ? response.data! : task)
-        prev.map(task => task.id === updateTask.id ? updateTask : task)
-      );
-      toast({
-        title: "Task updated successfully",
-        description: `"${updatedTask.title}" has been updated.`,
-      });
+        setTasks(prev =>
+          prev.map(task => task.id === updateTask.id ? updateTask : task)
+        );
+        toast({
+          title: "Task updated successfully",
+          description: `"${updatedTask.title}" has been updated.`,
+        });
       }
     }
     setIsTaskModalOpen(false);
@@ -528,70 +458,58 @@ const priorityMap: Record<TaskPriority, number> = {
         description: `"${deletedUser.name}" has been deleted.`,
       });
     }
-    
-    // setUsers(prev => prev.filter(u => u.id !== user.id));
-    // // Remove user from tasks as assignee
-    // setTasks(prev => prev.map(task => 
-    //   task.assignee?.id === user.id 
-    //     ? { ...task, assignee: null, updatedAt: new Date() }
-    //     : task
-    // ));
-    // toast({
-    //   title: "User deleted successfully",
-    //   description: `"${user.name}" has been removed.`,
-    // });
   };
 
   const confirmDeleteUser = (user: User) => {
     handleDeleteUser(user);
   };
 
-const handleSaveUser = async (userData: UserFormData) => {
+  const handleSaveUser = async (userData: UserFormData) => {
 
-  const userPayload = {
-    user_Name: userData.name,
-    full_Name: userData.full_name,
-    email: userData.email,
-    password: userData.password,
-    role_Id: roles.find(r => r.name === userData.role)?.id ?? null,
+    const userPayload = {
+      user_Name: userData.name,
+      full_Name: userData.full_name,
+      email: userData.email,
+      password: userData.password,
+      role_Id: roles.find(r => r.name === userData.role)?.id ?? null,
+    };
+
+    if (isCreatingUser) {
+      console.log("creatingUser");
+
+      // Create user
+      const response = await HttpClient.POST<User>('/api/User', userPayload);
+
+      if (!response.isError && response.data) {
+        const createdUser = response.data;
+        setUsers(prev => [...prev, createdUser]);
+        toast({
+          title: "User created successfully",
+          description: `"${createdUser.name || userPayload.user_Name}" has been created.`,
+        });
+      }
+    } else if (selectedUser) {
+      console.log("updatingUser");
+      //  Update user
+      const response = await HttpClient.PUT<User>(`/api/User/${selectedUser.id}`, userPayload);
+
+      if (!response.isError && response.data) {
+        const updatedUser = response.data;
+        setUsers(prev =>
+          prev.map(user => user.id === updatedUser.id ? updatedUser : user)
+        );
+        toast({
+          title: "User updated successfully",
+          description: `"${updatedUser.name || userPayload.user_Name}" has been updated.`,
+        });
+      }
+    }
+
+    // Cleanup
+    setIsUserModalOpen(false);
+    setSelectedUser(null);
+    setIsCreatingUser(false);
   };
-
-  if (isCreatingUser) {
-    console.log("creatingUser");
-  
-    // Create user
-    const response = await HttpClient.POST<User>('/api/User', userPayload);
-
-    if (!response.isError && response.data) {
-      const createdUser = response.data;
-      setUsers(prev => [...prev, createdUser]);
-      toast({
-        title: "User created successfully",
-        description: `"${createdUser.name || userPayload.user_Name}" has been created.`,
-      });
-    }
-  } else if (selectedUser) {
-    console.log("updatingUser");
-    //  Update user
-    const response = await HttpClient.PUT<User>(`/api/User/${selectedUser.id}`, userPayload);
-
-    if (!response.isError && response.data) {
-      const updatedUser = response.data;
-      setUsers(prev =>
-        prev.map(user => user.id === updatedUser.id ? updatedUser : user)
-      );
-      toast({
-        title: "User updated successfully",
-        description: `"${updatedUser.name || userPayload.user_Name}" has been updated.`,
-      });
-    }
-  }
-
-  // Cleanup
-  setIsUserModalOpen(false);
-  setSelectedUser(null);
-  setIsCreatingUser(false);
-};
 
 
   const handleCreateProject = () => {
@@ -633,14 +551,6 @@ const handleSaveUser = async (userData: UserFormData) => {
       });
     }
 
-
-
-    
-    // setProjects(prev => prev.filter(p => p.id !== project.id));
-    // toast({
-    //   title: "Project deleted successfully",
-    //   description: `"${project.name}" has been removed.`,
-    // });
   };
 
   const confirmDeleteProject = (project: Project) => {
@@ -651,54 +561,51 @@ const handleSaveUser = async (userData: UserFormData) => {
     console.log("handleSaveProject");
 
     const projectPayload = {
-    project_Name: projectData.name,
-    description: projectData.description,
-    productId: projectData.productId,
-    startDate: projectData.startDate,
-    endDate: projectData.endDate,
-    estimatedHours: projectData.estimatedHours,
+      project_Name: projectData.name,
+      description: projectData.description,
+      productId: projectData.productId,
+      startDate: projectData.startDate,
+      endDate: projectData.endDate,
+      estimatedHours: projectData.estimatedHours,
     };
 
     if (isCreatingProject) {
 
       console.log("creatingProject");
 
-    // Create project
-    const response = await HttpClient.POST<Project>('/api/Project', projectPayload);
+      // Create project
+      const response = await HttpClient.POST<Project>('/api/Project', projectPayload);
 
-    if (!response.isError && response.data) {
-      // const createdProject = response.data;
-      // const createdProject = response.data;
-      const createdProject = {
-        ...response.data,
-        startDate: new Date(response.data.startDate),
-        endDate: new Date(response.data.endDate),
-        createdAt: new Date(response.data.createdAt),
-      };
-      setProjects(prev => [...prev, createdProject]);
+      if (!response.isError && response.data) {
+        const createdProject = {
+          ...response.data,
+          startDate: new Date(response.data.startDate),
+          endDate: new Date(response.data.endDate),
+          createdAt: new Date(response.data.createdAt),
+        };
+        setProjects(prev => [...prev, createdProject]);
 
-      toast({
-        title: "Project created successfully",
-        description: `"${createdProject.name || projectPayload.project_Name}" has been created.`,
-      });
-    }
-      
+        toast({
+          title: "Project created successfully",
+          description: `"${createdProject.name || projectPayload.project_Name}" has been created.`,
+        });
+      }
+
     } else if (selectedProject) {
       // Editing existing project
 
-        console.log("updatingProject");
+      console.log("updatingProject");
 
       // Update project
       const response = await HttpClient.PUT<Project>(`/api/Project/${selectedProject.id}`, projectPayload);
 
       if (!response.isError && response.data) {
-        // const updatedProject = response.data;
         const updatedProject = {
-        ...response.data,
-        startDate: new Date(response.data.startDate),
-        endDate: new Date(response.data.endDate),
-        createdAt: new Date(response.data.createdAt),
-      };
+          ...response.data,
+          startDate: new Date(response.data.startDate),
+          endDate: new Date(response.data.endDate),
+          createdAt: new Date(response.data.createdAt),
+        };
         setProjects(prev =>
           prev.map(project => project.id === updatedProject.id ? updatedProject : project)
         );
@@ -708,7 +615,7 @@ const handleSaveUser = async (userData: UserFormData) => {
           description: `"${updatedProject.name || projectPayload.project_Name}" has been updated.`,
         });
       }
-      
+
     }
     setIsProjectModalOpen(false);
     setSelectedProject(null);
@@ -718,10 +625,10 @@ const handleSaveUser = async (userData: UserFormData) => {
 
 
 
-// PRODUCT STUFF
+  // PRODUCT STUFF
 
 
-    const handleCreateProduct = () => {
+  const handleCreateProduct = () => {
     setSelectedProduct(null);
     setIsCreatingProduct(true);
     setIsProductModalOpen(true);
@@ -737,15 +644,15 @@ const handleSaveUser = async (userData: UserFormData) => {
 
     console.log("handleDeleteProduct");
     // Check if project has tasks
-    // const Productprojects = projects.filter(project => project.productId === product.id);
-    // if (Productprojects.length > 0) {
-    //   toast({
-    //     title: "Cannot delete product",
-    //     description: `This product has ${Productprojects.length} task(s). Please reassign or delete them first.`,
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
+    const Productprojects = projects.filter(project => project.productId === product.id);
+    if (Productprojects.length > 0) {
+      toast({
+        title: "Cannot delete product",
+        description: `This product has ${Productprojects.length} task(s). Please reassign or delete them first.`,
+        variant: "destructive",
+      });
+      return;
+    }
 
 
     const response = await HttpClient.DELETE<Product>(`/api/Product/${product.id}`);
@@ -760,14 +667,6 @@ const handleSaveUser = async (userData: UserFormData) => {
       });
     }
 
-
-
-    
-    // setProjects(prev => prev.filter(p => p.id !== project.id));
-    // toast({
-    //   title: "Project deleted successfully",
-    //   description: `"${project.name}" has been removed.`,
-    // });
   };
 
   const confirmDeleteProduct = (product: Product) => {
@@ -778,50 +677,37 @@ const handleSaveUser = async (userData: UserFormData) => {
     console.log("handleSaveProduct");
 
     const productPayload = {
-    name: productData.name,
-    description: productData.description
+      name: productData.name,
+      description: productData.description
     };
 
     if (isCreatingProduct) {
 
       console.log("creatingProduct");
 
-    // Create project
-    const response = await HttpClient.POST<Product>('/api/Product', productPayload);
+      // Create project
+      const response = await HttpClient.POST<Product>('/api/Product', productPayload);
 
-    if (!response.isError && response.data) {
-      // const createdProject = response.data;
-      const createdProduct = response.data;
-      // const createdProject = {
-      //   ...response.data,
-      //   startDate: new Date(response.data.startDate),
-      //   endDate: new Date(response.data.endDate),
-      //   createdAt: new Date(response.data.createdAt),
-      // };
-      setProducts(prev => [...prev, createdProduct]);
+      if (!response.isError && response.data) {
+        const createdProduct = response.data;
+        setProducts(prev => [...prev, createdProduct]);
 
-      toast({
-        title: "Project created successfully",
-        description: `"${createdProduct.name}" has been created.`,
-      });
-    }
-      
+        toast({
+          title: "Project created successfully",
+          description: `"${createdProduct.name}" has been created.`,
+        });
+      }
+
     } else if (selectedProduct) {
       // Editing existing project
 
-        console.log("updatingProduct");
+      console.log("updatingProduct");
 
       // Update project
       const response = await HttpClient.PUT<Product>(`/api/Product/${selectedProduct.id}`, productPayload);
 
       if (!response.isError && response.data) {
         const updatedProduct = response.data;
-      //   const updatedProduct = {
-      //   ...response.data,
-      //   startDate: new Date(response.data.startDate),
-      //   endDate: new Date(response.data.endDate),
-      //   createdAt: new Date(response.data.createdAt),
-      // };
         setProducts(prev =>
           prev.map(product => product.id === updatedProduct.id ? updatedProduct : product)
         );
@@ -831,7 +717,7 @@ const handleSaveUser = async (userData: UserFormData) => {
           description: `"${updatedProduct.name}" has been updated.`,
         });
       }
-      
+
     }
     setIsProductModalOpen(false);
     setSelectedProduct(null);
@@ -842,13 +728,203 @@ const handleSaveUser = async (userData: UserFormData) => {
 
 
 
+  //FOR STATUS
+  const handleCreateStatus = () => {
+    setSelectedStatus(null);
+    setIsCreatingStatus(true);
+    setIsStatusModalOpen(true);
+  };
 
+  const handleEditStatus = (status: Column) => {
+    setSelectedStatus(status);
+    setIsCreatingStatus(false);
+    setIsStatusModalOpen(true);
+  };
 
+  const handleDeleteStatus = async (status: Column) => {
+    console.log("handleDeleteStatus");
 
+    // Check if status has tasks
+    const statusTasks = tasks.filter(task => task.status === status.name);
+    if (statusTasks.length > 0) {
+      toast({
+        title: "Cannot delete status",
+        description: `This status has ${statusTasks.length} task(s). Please reassign or delete them first.`,
+        variant: "destructive",
+      });
+      return;
+    }
 
-   if (!currentUser || !projects) {
-        return <p>Loading...</p>; // Or return a spinner / skeleton
+    const response = await HttpClient.DELETE<Column>(`/api/TasksStatus/${status.id}`);
+
+    if (!response.isError && response.data) {
+      const deletedStatus = response.data;
+      setStatuses(prev => prev.filter(s => s.id !== deletedStatus.id));
+
+      toast({
+        title: "Status deleted successfully",
+        description: `"${deletedStatus.name || status.name}" has been deleted.`,
+      });
+    }
+  };
+
+  const confirmDeleteStatus = (status: Column) => {
+    handleDeleteStatus(status);
+  };
+
+  const handleSaveStatus = async (statusData: StatusFormData) => {
+    console.log("handleSaveStatus");
+
+    const statusPayload = {
+      name: statusData.name,
+      description: statusData.description,
+      color: statusData.color
+    };
+
+    if (isCreatingStatus) {
+      console.log("creatingStatus");
+
+      // Create status
+      const response = await HttpClient.POST<Column>('/api/TasksStatus', statusPayload);
+
+      if (!response.isError && response.data) {
+        const createdStatus = {
+          ...response.data
+        };
+        setStatuses(prev => [...prev, createdStatus]);
+
+        toast({
+          title: "Status created successfully",
+          description: `"${createdStatus.name || statusPayload.name}" has been created.`,
+        });
       }
+    } else if (selectedStatus) {
+      console.log("updatingStatus");
+
+      // Update status
+      const response = await HttpClient.PUT<Column>(`/api/TasksStatus/${selectedStatus.id}`, statusPayload);
+
+      if (!response.isError && response.data) {
+        const updatedStatus = {
+          ...response.data
+        };
+        // setStatuses(prev =>
+        //   prev.map(status => status.id === updatedStatus.id ? updatedStatus : status)
+        // );
+
+        setStatuses(prev =>
+          prev.map(status =>
+            status.id === updatedStatus.id ? { ...status, ...updatedStatus } : status
+          )
+        );
+
+
+        // setRefreshKey(old => old + 1); // Trigger data refresh
+
+        toast({
+          title: "Status updated successfully",
+          description: `"${updatedStatus.name || statusPayload.name}" has been updated.`,
+        });
+      }
+    }
+
+    setIsStatusModalOpen(false);
+    setSelectedStatus(null);
+    setIsCreatingStatus(false);
+  };
+
+
+  //FOR ROLES
+  const handleCreateRole = () => {
+    setSelectedRole(null);
+    setIsCreatingRole(true);
+    setIsRoleModalOpen(true);
+  };
+
+  const handleEditRole = (role: UserRole) => {
+    setSelectedRole(role);
+    setIsCreatingRole(false);
+    setIsRoleModalOpen(true);
+  };
+
+  const handleDeleteRole = async (role: UserRole) => {
+    console.log("handleDeleteRole");
+
+    const roleUsers = users.filter(user => user.role === role.name);
+    if (roleUsers.length > 0) {
+      toast({
+        title: "Cannot delete role",
+        description: `This role has ${roleUsers.length} user(s). Please reassign or remove them first.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+
+    const response = await HttpClient.DELETE<UserRole>(`/api/Role/${role.id}`);
+
+    if (!response.isError && response.data) {
+      const deletedRole = response.data;
+      setRoles(prev => prev.filter(r => r.id !== deletedRole.id));
+
+      toast({
+        title: "Role deleted successfully",
+        description: `"${deletedRole.name || role.name}" has been deleted.`,
+      });
+    }
+  };
+
+  const confirmDeleteRole = (role: UserRole) => {
+    handleDeleteRole(role);
+  };
+
+  const handleSaveRole = async (roleData: { name: string }) => {
+    console.log("handleSaveRole");
+
+    const rolePayload = {
+      name: roleData.name,
+    };
+
+    if (isCreatingRole) {
+      console.log("creatingRole");
+
+      // Create role
+      const response = await HttpClient.POST<UserRole>('/api/Role', rolePayload);
+
+      if (!response.isError && response.data) {
+        const createdRole = response.data;
+        setRoles(prev => [...prev, createdRole]);
+
+        toast({
+          title: "Role created successfully",
+          description: `"${createdRole.name}" has been created.`,
+        });
+      }
+    } else if (selectedRole) {
+      console.log("updatingRole");
+
+      // Update role
+      const response = await HttpClient.PUT<UserRole>(`/api/Role/${selectedRole.id}`, rolePayload);
+
+      if (!response.isError && response.data) {
+        const updatedRole = response.data;
+        setRoles(prev =>
+          prev.map(role => role.id === updatedRole.id ? updatedRole : role)
+        );
+
+        toast({
+          title: "Role updated successfully",
+          description: `"${updatedRole.name}" has been updated.`,
+        });
+      }
+    }
+
+    setIsRoleModalOpen(false);
+    setSelectedRole(null);
+    setIsCreatingRole(false);
+  };
+
+  //FOR HOLIDAYS
 
   const handleCreateHoliday = () => {
     setSelectedHoliday(null);
@@ -869,16 +945,14 @@ const handleSaveUser = async (userData: UserFormData) => {
       name: holidayData.name,
       date: holidayData.date
     };
-  
-      if (isCreatingHoliday) {
-        
 
-        // Create project
+    if (isCreatingHoliday) {
+
+
+      // Create project
       const response = await HttpClient.POST<Holiday>('/api/Holiday', holidayPayload);
 
       if (!response.isError && response.data) {
-        // const createdProject = response.data;
-        // const createdProject = response.data;
         const createdHoliday = {
           ...response.data,
           date: new Date(response.data.date),
@@ -893,18 +967,17 @@ const handleSaveUser = async (userData: UserFormData) => {
 
 
 
-      } else if (selectedHoliday) {
-        
+    } else if (selectedHoliday) {
 
-        // Update project
+
+      // Update project
       const response = await HttpClient.PUT<Holiday>(`/api/Holiday/${selectedHoliday.id}`, holidayPayload);
 
       if (!response.isError && response.data) {
-        // const updatedProject = response.data;
         const updatedHoliday = {
-        ...response.data,
-        date: new Date(response.data.date),
-      };
+          ...response.data,
+          date: new Date(response.data.date),
+        };
         setHolidays(prev =>
           prev.map(holiday => holiday.id === updatedHoliday.id ? updatedHoliday : holiday)
         );
@@ -916,25 +989,23 @@ const handleSaveUser = async (userData: UserFormData) => {
       }
 
 
-      }
- 
-      setSavingHoliday(false);
-      setIsHolidayModalOpen(false);
-      setSelectedHoliday(null);
-      setIsCreatingHoliday(false);
+    }
+
+    setSavingHoliday(false);
+    setIsHolidayModalOpen(false);
+    setSelectedHoliday(null);
+    setIsCreatingHoliday(false);
   };
 
-  const getStatusColor = (status: string) => {
-  const col = columns.find((c) => c.name === status);
-  return col?.color || "#6b7280"; // default gray if not found
-};
-
+  if (!currentUser || !projects) {
+    return <p>Loading...</p>; // Or return a spinner / skeleton
+  }
 
   return (
 
     <div className="min-h-screen bg-background">
-      <header className="border-b"> 
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 pl-10">
               <TrendingUp className="h-6 w-6 text-primary" />
@@ -942,36 +1013,36 @@ const handleSaveUser = async (userData: UserFormData) => {
             </div>
             <div className="flex items-center gap-4">
 
-              {currentUser && (
-                <div className="flex items-center gap-2 w-full px-3 py-2 border rounded-md">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`} />
-                    <AvatarFallback className="text-xs bg-primary/10">
-                      {currentUser.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">{currentUser.full_name}</span>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ml-auto ${
-                      currentUser.role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+
+              <div
+                onClick={() => setOpen(true)}
+                className="flex items-center gap-2 w-full px-3 py-2 border rounded-md cursor-pointer hover:bg-muted/50 transition"
+              >
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`} />
+                  <AvatarFallback className="text-xs bg-primary/10">
+                    {currentUser.name.split(" ").map((n) => n[0]).join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-medium">{currentUser.full_name}</span>
+                <Badge
+                  variant="outline"
+                  className={`text-xs ml-auto ${currentUser.role === "manager"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-green-100 text-green-800"
                     }`}
-                  >
-                    {currentUser.role}
-                  </Badge>
-                </div>
-              )}
+                >
+                  {currentUser.role}
+                </Badge>
+              </div>
 
+              {/* Profile Modal */}
+              <ProfileModal
+                user={currentUser}
+                isOpen={open}
+                onClose={() => setOpen(false)}
+              />
 
-
-
-
-              {/* {currentUser.role === 'manager' && (
-                <Button onClick={handleCreateTask} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  New Task
-                </Button>
-              )} */}
 
               {['manager', 'admin'].includes(currentUser.role) && (
                 <Button onClick={handleCreateTask} className="gap-2">
@@ -980,9 +1051,9 @@ const handleSaveUser = async (userData: UserFormData) => {
                 </Button>
               )}
 
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   localStorage.removeItem('token');
                   localStorage.removeItem("user");
@@ -999,517 +1070,338 @@ const handleSaveUser = async (userData: UserFormData) => {
       </header>
 
       <SidebarProvider>
-      <main className="container mx-auto px-4 py-6">
-         <div className="flex">
+        <main className="container mx-auto px-4 py-1">
+          <div className="flex">
 
-          {/* Sidebar */}
-          <TaskSidebar
-            currentUser={currentUser}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        <div className="flex-1">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          {/* <TabsList className="flex w-full justify-evenly">
-            <TabsTrigger value="kanban">Kanban</TabsTrigger>
-            <TabsTrigger value="list">List</TabsTrigger>
-            <TabsTrigger value="stats">Stats</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-
-            {['manager', 'admin'].includes(currentUser.role) && (
-              <>
-                <TabsTrigger value="users">Users</TabsTrigger>
-                <TabsTrigger value="projects">Projects</TabsTrigger>
-                <TabsTrigger value="products">Products</TabsTrigger>
-              </>
-            )}
-            <TabsTrigger value="holidays">Holidays</TabsTrigger>
-          </TabsList> */}
-
-            
-          <TabsContent value="kanban" className="space-y-4">
-            {/* <div className="max-h-[calc(100vh-200px)] overflow-hidden"> */}
-            {tasks.length > 0 ? (
-              <KanbanBoard 
-                tasks={tasks}
-                currentUser={currentUser}
-                onEditTask={handleEditTask}
-                onView={handleViewTask}
-                onStatusChange={handleStatusChange}
-                columns={columns}
-              />
-            ) : (
-              <p>No tasks found.</p>
-            )}
-            {/* </div> */}
-          </TabsContent>
-
-
-          <TabsContent value="list" className="space-y-6">
-          {/* Search bar */}
-          <div className="flex items-center gap-2 mb-4">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search tasks..."
-              value={taskSearch}
-              onChange={(e) => setTaskSearch(e.target.value)}
-              className="max-w-sm"
+            {/* Sidebar */}
+            <TaskSidebar
+              currentUser={currentUser}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
             />
-          </div>
+            <div className="flex-1">
+              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
 
-          {/* Tasks table */}
-          {filteredTasks.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground border rounded-xl">
-              {taskSearch ? "No tasks found matching your search." : "No tasks available."}
-            </div>
-          ) : (
-            <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px]">Title</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTasks.map((task) => (
-                    <TableRow key={task.id} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-medium">{task.name}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {task.description || <span className="italic text-gray-400">No description</span>}
-                      </TableCell>
-                      <TableCell>{task.endDate.toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Badge
-                        style={{
-                          backgroundColor: `${getStatusColor(task.status)}43`,
-                          color: 'black',
-                        }}
-                      >
-                        {task.status}
-                      </Badge>
-
-                      </TableCell>
-                      <TableCell className="text-right flex gap-2 justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewTask(task)}
-                        >
-                          <Eye className="h-4 w-4 text-blue-500" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditTask(task)}
-                        >
-                          <Edit className="h-4 w-4 text-green-500" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </TabsContent>
+                <TabsContent value="kanban" className="space-y-4">
+                  {tasks.length > 0 ? (
+                    <KanbanBoard
+                      tasks={tasks}
+                      currentUser={currentUser}
+                      onEditTask={handleEditTask}
+                      onView={handleViewTask}
+                      onStatusChange={handleStatusChange}
+                      columns={statuses}
+                    />
+                  ) : (
+                    <p>No tasks found.</p>
+                  )}
+                </TabsContent>
 
 
-          <TabsContent value="stats" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{taskStats.total}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Assigned</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{taskStats.assigned}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {taskStats.unassigned} unassigned
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{taskStats.byStatus['in-progress'] || 0}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{taskStats.byStatus.done || 0}</div>
-                </CardContent>
-              </Card>
-            </div>
+                <TabsContent value="list" className="space-y-6">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tasks by Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {Object.entries(taskStats.byStatus).map(([status, count]) => (
-                    <div key={status} className="flex items-center justify-between">
-                      <span className="capitalize">{status.replace('-', ' ')}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-muted rounded-full h-2">
-                          <div 
-                            className="h-2 rounded-full bg-primary"
-                            style={{ width: `${(count / taskStats.total) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium w-8">{count}</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+                  <TaskTable
+                    tasks={filteredTasks}
+                    onEditTask={handleEditTask}
+                    onView={handleViewTask}
+                    canEdit={true}
+                    columns={statuses}
+                  />
+                </TabsContent>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Priority Distribution</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {Object.entries(taskStats.byPriority).map(([priority, count]) => (
-                    <div key={priority} className="flex items-center justify-between">
-                      <span className="capitalize">{priority}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-muted rounded-full h-2">
-                          <div 
-                            className="h-2 rounded-full bg-primary"
-                            style={{ width: `${(count / taskStats.total) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium w-8">{count}</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
 
-          <TabsContent value="reports" className="space-y-4">
-            <Reports 
-              tasks={tasks}
-              users={users}
-            />
-          </TabsContent>
+                <TabsContent value="stats" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{taskStats.total}</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Assigned</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{taskStats.assigned}</div>
+                        <p className="text-xs text-muted-foreground">
+                          {taskStats.unassigned} unassigned
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{taskStats.byStatus['in-progress'] || 0}</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{taskStats.byStatus.done || 0}</div>
+                      </CardContent>
+                    </Card>
+                  </div>
 
-          <TabsContent value="users" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">User Management</h2>
-              <Button onClick={handleCreateUser} className="gap-2">
-                <UserPlus className="h-4 w-4" />
-                Add User
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-2 mb-4">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                className="max-w-sm"
-              />
-            </div>
-            
-            <div className="grid gap-4">
-              {filteredUsers.map(user => (
-                <Card key={user.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`} />
-                          <AvatarFallback className="text-sm">
-                            {user.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold">{user.name}</h3>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={user.role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}>
-                          {user.role}
-                        </Badge>
-                        {user.id === currentUser.id && (
-                          <Badge variant="secondary">Current</Badge>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditUser(user)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled={user.id === currentUser.id}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                               This action cannot be undone. This will permanently delete the user "{user.name}".{" "}
-                                {tasks.some(t => t.assigneeId === user.id)
-                                  ? "This user is assigned to tasks and cannot be removed."
-                                    : ""}
-                                </AlertDialogDescription>
-
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                               onClick={() => confirmDeleteUser(user)}
-                               disabled={tasks.some(t => t.assigneeId === user.id)}
-                               >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="projects" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Project Management</h2>
-              <Button onClick={handleCreateProject} className="gap-2">
-                <FolderPlus className="h-4 w-4" />
-                Add Project
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-2 mb-4">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search projects..."
-                value={projectSearch}
-                onChange={(e) => setProjectSearch(e.target.value)}
-                className="max-w-sm"
-              />
-            </div>
-            
-            <div className="grid gap-4">
-              
-              {filteredProjects.map(project => (
-                <Card key={project.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-medium text-lg">{project.name}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                              {/* <span>Created: {project.createdAt.toLocaleDateString()}</span> */}
-                              {/* <span>Created: {project.createdAt}</span> */}
-                              <span>Created: {project.createdAt.toLocaleDateString()}</span>
-                              {/* <span>Tasks: {tasks.filter(t => t.projectId === project.id).length}</span> */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Tasks by Status</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {Object.entries(taskStats.byStatus).map(([status, count]) => (
+                          <div key={status} className="flex items-center justify-between">
+                            <span className="capitalize">{status.replace('-', ' ')}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 bg-muted rounded-full h-2">
+                                <div
+                                  className="h-2 rounded-full bg-primary"
+                                  style={{ width: `${(count / taskStats.total) * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-medium w-8">{count}</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditProject(project)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the project "{project.name}". {tasks.filter(t => t.projectId === project.id).length > 0 ? 'This project has tasks assigned to it and cannot be deleted.' : ''}
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => confirmDeleteProject(project)}
-                                    disabled={tasks.filter(t => t.projectId === project.id).length > 0}
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Priority Distribution</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {Object.entries(taskStats.byPriority).map(([priority, count]) => (
+                          <div key={priority} className="flex items-center justify-between">
+                            <span className="capitalize">{priority}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 bg-muted rounded-full h-2">
+                                <div
+                                  className="h-2 rounded-full bg-primary"
+                                  style={{ width: `${(count / taskStats.total) * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-medium w-8">{count}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="reports" className="space-y-4">
+                  <Reports
+                    tasks={tasks}
+                    users={users}
+                  />
+                </TabsContent>
+
+                <TabsContent value="users" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">User Management</h2>
+                    <Button onClick={handleCreateUser} className="gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      Add User
+                    </Button>
+                  </div>
+
+                  <UserTable
+                    users={filteredUsers}
+                    onEditUser={handleEditUser}
+                    onDeleteUser={confirmDeleteUser}
+                    roles={roles}
+                  />
+
+                </TabsContent>
+
+                <TabsContent value="projects" className="space-y-4">
+
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">Project Management</h2>
+                    <Button onClick={handleCreateProject} className="gap-2">
+                      <FolderPlus className="h-4 w-4" />
+                      Add Project
+                    </Button>
+                  </div>
+
+                  <ProjectTable
+                    projects={filteredProjects}
+                    onEditProject={handleEditProject}
+                    onDeleteProject={confirmDeleteProject}
+                    products={products}
+                  />
+
+
+                </TabsContent>
+
+                <TabsContent value="products" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">Product Management</h2>
+                    <Button onClick={handleCreateProduct} className="gap-2">
+                      <FolderPlus className="h-4 w-4" />
+                      Add Product
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-4">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search products..."
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      className="max-w-sm"
+                    />
+                  </div>
+
+                  <div className="grid gap-4">
+
+                    {filteredProducts.map(product => (
+                      <Card key={product.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h3 className="font-medium text-lg">{product.name}</h3>
+                                  <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
+                                  {/* <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground"> */}
+                                  {/* <span>Created: {project.createdAt.toLocaleDateString()}</span> */}
+                                  {/* <span>Created: {project.createdAt}</span> */}
+                                  {/* <span>Created: {project.createdAt.toLocaleDateString()}</span> */}
+                                  {/* <span>Tasks: {tasks.filter(t => t.projectId === project.id).length}</span> */}
+                                  {/* </div> */}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditProduct(product)}
                                   >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-destructive hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          {/* This action cannot be undone. This will permanently delete the project "{product.name}". {projects.filter(t => t.productId === product.id).length > 0 ? 'This product has projects assigned to it and cannot be deleted.' : ''} */}
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => confirmDeleteProduct(product)}
+                                        // disabled={products.filter(t => t.productId === product.id).length > 0}
+                                        >
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
 
-          <TabsContent value="products" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Product Management</h2>
-              <Button onClick={handleCreateProduct} className="gap-2">
-                <FolderPlus className="h-4 w-4" />
-                Add Product
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-2 mb-4">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search products..."
-                value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
-                className="max-w-sm"
-              />
-            </div>
-            
-            <div className="grid gap-4">
-              
-              {filteredProducts.map(product => (
-                <Card key={product.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-medium text-lg">{product.name}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
-                            {/* <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground"> */}
-                              {/* <span>Created: {project.createdAt.toLocaleDateString()}</span> */}
-                              {/* <span>Created: {project.createdAt}</span> */}
-                              {/* <span>Created: {project.createdAt.toLocaleDateString()}</span> */}
-                              {/* <span>Tasks: {tasks.filter(t => t.projectId === project.id).length}</span> */}
-                            {/* </div> */}
+                <TabsContent value="status" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">Task Statuses</h2>
+                    <Button onClick={handleCreateStatus} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Status
+                    </Button>
+                  </div>
+
+                  <StatusTable
+                    statuses={statuses}
+                    onEditStatus={handleEditStatus}
+                    onDeleteStatus={confirmDeleteStatus}
+                  />
+
+                </TabsContent>
+
+                <TabsContent value="roles" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">User Roles</h2>
+                    <Button onClick={handleCreateRole} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Role
+                    </Button>
+                  </div>
+
+                  <RoleTable
+                    roles={roles}
+                    onEditRole={handleEditRole}
+                    onDeleteRole={confirmDeleteRole}
+                  />
+
+
+                </TabsContent>
+
+
+                <TabsContent value="holidays" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">Gazetted Holidays</h2>
+                    <Button onClick={handleCreateHoliday} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Holiday
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-4">
+                    {holidays.map(holiday => (
+                      <Card key={holiday.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-medium">{holiday.name}</h3>
+                              <p className="text-sm text-muted-foreground">{holiday.date.toLocaleDateString()}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => handleEditHoliday(holiday)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setHolidays(prev => prev.filter(h => h.id !== holiday.id))}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditProduct(product)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    {/* This action cannot be undone. This will permanently delete the project "{product.name}". {projects.filter(t => t.productId === product.id).length > 0 ? 'This product has projects assigned to it and cannot be deleted.' : ''} */}
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => confirmDeleteProduct(product)}
-                                    // disabled={products.filter(t => t.productId === product.id).length > 0}
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+
+
+              </Tabs>
             </div>
-          </TabsContent>
-
-
-          <TabsContent value="holidays" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Gazetted Holidays</h2>
-              <Button onClick={handleCreateHoliday} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Holiday
-              </Button>
-            </div>
-            
-            <div className="grid gap-4">
-              {holidays.map(holiday => (
-                <Card key={holiday.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium">{holiday.name}</h3>
-                        <p className="text-sm text-muted-foreground">{holiday.date.toLocaleDateString()}</p>
-                      </div>
-                       <div className="flex items-center gap-2">
-                         <Button variant="ghost" size="sm" onClick={() => handleEditHoliday(holiday)}>
-                           <Edit className="h-4 w-4" />
-                         </Button>
-                         <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setHolidays(prev => prev.filter(h => h.id !== holiday.id))}>
-                           <Trash2 className="h-4 w-4" />
-                         </Button>
-                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-
-        </Tabs>
-        </div>
-        </div>
-      </main>
+          </div>
+        </main>
       </SidebarProvider>
 
       {currentUser && (
@@ -1530,7 +1422,7 @@ const handleSaveUser = async (userData: UserFormData) => {
           holidays={holidays}
           isCreating={isCreatingTask}
           isSaving={savingTask}
-          columns={columns}
+          columns={statuses}
         />
       )}
 
@@ -1583,6 +1475,39 @@ const handleSaveUser = async (userData: UserFormData) => {
         isSaving={savingProduct}
       />
 
+
+      <StatusModal
+        status={selectedStatus}
+        isOpen={isStatusModalOpen}
+        onClose={() => {
+          if (!savingStatus) {
+            setIsStatusModalOpen(false);
+            setSelectedStatus(null);
+            setIsCreatingStatus(false);
+          }
+        }}
+        onSave={handleSaveStatus}
+        isCreating={isCreatingStatus}
+        isSaving={savingStatus}
+      />
+
+      <RoleModal
+        role={selectedRole}
+        isOpen={isRoleModalOpen}
+        onClose={() => {
+          if (!savingRole) {
+            setIsRoleModalOpen(false);
+            setSelectedRole(null);
+            setIsCreatingRole(false);
+          }
+        }}
+        onSave={handleSaveRole}
+        isCreating={isCreatingRole}
+        isSaving={savingRole}
+      />
+
+
+
       <HolidayModal
         holiday={selectedHoliday}
         isOpen={isHolidayModalOpen}
@@ -1597,7 +1522,7 @@ const handleSaveUser = async (userData: UserFormData) => {
         isCreating={isCreatingHoliday}
         isSaving={savingHoliday}
       />
-      
+
     </div>
   );
 }

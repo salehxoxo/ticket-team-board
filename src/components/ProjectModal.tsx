@@ -91,6 +91,10 @@ export function ProjectModal({ project, isOpen, availableProducts, onClose, onSa
       newErrors.endDate = 'End date must be after start date';
     }
 
+    if (!formData.productId) {
+      newErrors.productId = 'Product selection is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -145,6 +149,7 @@ export function ProjectModal({ project, isOpen, availableProducts, onClose, onSa
                 ))}
               </SelectContent>
             </Select>
+            {errors.productId && <span className="text-sm text-destructive">{errors.productId}</span>}
           </div>
 
         <div className="grid gap-6 py-4">

@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import TaskDetails from "./pages/TaskDetails";
 import PrivateRoute from "./components/PrivateRoute";
+import { Footer } from "./components/Footer";
 
 
 // localStorage.removeItem("token"); // Remove this line when deploying
@@ -29,6 +30,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Footer />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

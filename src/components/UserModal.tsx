@@ -86,6 +86,17 @@ export function UserModal({
       newErrors.email = 'Please enter a valid email';
     }
 
+    if(!formData.full_name.trim()) {
+      newErrors.full_name = 'Full name is required'; 
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password && formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -249,7 +260,7 @@ export function UserModal({
             <X className="w-4 h-4 mr-2" />
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={Object.keys(errors).length > 0 || isSaving}>
+          <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? (
               <div className="animate-spin rounded-full h-4 w-4 mr-2 border-b-2 border-current" />
             ) : (
