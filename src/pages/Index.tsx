@@ -67,10 +67,10 @@ export default function Index() {
   const [isCreatingStatus, setIsCreatingStatus] = useState(false);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [isCreatingHoliday, setIsCreatingHoliday] = useState(false);
-  const [taskSearch, setTaskSearch] = useState("");
-  const [userSearch, setUserSearch] = useState("");
-  const [projectSearch, setProjectSearch] = useState("");
-  const [productSearch, setProductSearch] = useState("");
+  // const [taskSearch, setTaskSearch] = useState("");
+  // const [userSearch, setUserSearch] = useState("");
+  // const [projectSearch, setProjectSearch] = useState("");
+  // const [productSearch, setProductSearch] = useState("");
   const [savingTask, setSavingTask] = useState(false);
   const [savingUser, setSavingUser] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
@@ -223,35 +223,44 @@ export default function Index() {
     };
   }, [tasks]);
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter(task =>
-      task.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
-      task.description.toLowerCase().includes(taskSearch.toLowerCase()) ||
-      task.id.toLowerCase().includes(taskSearch.toLowerCase())
-    );
-  }, [tasks, taskSearch]);
+  // const filteredTasks = useMemo(() => {
+  //   return tasks.filter(task =>
+  //     task.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
+  //     task.description.toLowerCase().includes(taskSearch.toLowerCase()) ||
+  //     task.id.toLowerCase().includes(taskSearch.toLowerCase())
+  //   );
+  // }, [tasks, taskSearch]);
 
-  const filteredUsers = useMemo(() => {
-    return users.filter(user =>
-      user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-      user.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-      user.role.toLowerCase().includes(userSearch.toLowerCase())
-    );
-  }, [users, userSearch]);
+  // const filteredUsers = useMemo(() => {
+  //   return users.filter(user =>
+  //     user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+  //     user.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+  //     user.role.toLowerCase().includes(userSearch.toLowerCase())
+  //   );
+  // }, [users, userSearch]);
 
-  const filteredProjects = useMemo(() => {
-    return projects.filter(project =>
-      project.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
-      project.description.toLowerCase().includes(projectSearch.toLowerCase())
-    );
-  }, [projects, projectSearch]);
+  // const filteredProjects = useMemo(() => {
+  //   return projects.filter(project =>
+  //     project.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
+  //     project.description.toLowerCase().includes(projectSearch.toLowerCase())
+  //   );
+  // }, [projects, projectSearch]);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(product =>
-      product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-      product.description.toLowerCase().includes(productSearch.toLowerCase())
-    );
-  }, [products, productSearch]);
+  // const filteredProducts = useMemo(() => {
+  //   return products.filter(product =>
+  //     product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+  //     product.description.toLowerCase().includes(productSearch.toLowerCase())
+  //   );
+  // }, [products, productSearch]);
+
+  const priorityMap: Record<TaskPriority, number> = {
+    'low': 1,
+    'medium': 2,
+    'high': 3,
+    'urgent': 4
+  };
+
+  //FOR TASK
 
   const handleCreateTask = () => {
     if (!['manager', 'admin'].includes(currentUser.role)) {
@@ -266,13 +275,6 @@ export default function Index() {
     setSelectedTask(null);
     setIsCreatingTask(true);
     setIsTaskModalOpen(true);
-  };
-
-  const priorityMap: Record<TaskPriority, number> = {
-    'low': 1,
-    'medium': 2,
-    'high': 3,
-    'urgent': 4
   };
 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
@@ -314,7 +316,6 @@ export default function Index() {
   };
 
 
-  //FOR TASK
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
     setIsCreatingTask(false);
@@ -1129,7 +1130,7 @@ export default function Index() {
                 <TabsContent value="list" className="space-y-6">
 
                   <TaskTable
-                    tasks={filteredTasks}
+                    tasks={tasks}
                     onEditTask={handleEditTask}
                     onView={handleViewTask}
                     canEdit={true}
@@ -1159,7 +1160,7 @@ export default function Index() {
                   </div>
 
                   <UserTable
-                    users={filteredUsers}
+                    users={users}
                     onEditUser={handleEditUser}
                     onDeleteUser={confirmDeleteUser}
                     roles={roles}
@@ -1178,7 +1179,7 @@ export default function Index() {
                   </div>
 
                   <ProjectTable
-                    projects={filteredProjects}
+                    projects={projects}
                     onEditProject={handleEditProject}
                     onDeleteProject={confirmDeleteProject}
                     products={products}
