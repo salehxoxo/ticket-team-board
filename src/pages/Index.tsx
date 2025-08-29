@@ -30,6 +30,9 @@ import { StatusFormData, StatusModal } from "@/components/StatusModal";
 import { StatusTable } from "@/components/StatusTable";
 import { RoleTable } from "@/components/RoleTable";
 import { RoleModal } from "@/components/RoleModal";
+import TaskStats from "@/components/TaskStats";
+import { ProductTable } from "@/components/ProductTable";
+import { HolidayTable } from "@/components/HolidayTable";
 
 
 
@@ -311,6 +314,7 @@ export default function Index() {
   };
 
 
+  //FOR TASK
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
     setIsCreatingTask(false);
@@ -424,6 +428,8 @@ export default function Index() {
     setIsCreatingTask(false);
   };
 
+
+  //FOR USER
   const handleCreateUser = () => {
     setSelectedUser(null);
     setIsCreatingUser(true);
@@ -512,6 +518,7 @@ export default function Index() {
   };
 
 
+  //FOR PROJECT
   const handleCreateProject = () => {
     setSelectedProject(null);
     setIsCreatingProject(true);
@@ -626,7 +633,6 @@ export default function Index() {
 
 
   // PRODUCT STUFF
-
 
   const handleCreateProduct = () => {
     setSelectedProduct(null);
@@ -812,14 +818,9 @@ export default function Index() {
         //   prev.map(status => status.id === updatedStatus.id ? updatedStatus : status)
         // );
 
-        setStatuses(prev =>
-          prev.map(status =>
-            status.id === updatedStatus.id ? { ...status, ...updatedStatus } : status
-          )
-        );
 
 
-        // setRefreshKey(old => old + 1); // Trigger data refresh
+        setRefreshKey(old => old + 1); // Trigger data refresh
 
         toast({
           title: "Status updated successfully",
@@ -937,6 +938,33 @@ export default function Index() {
     setIsCreatingHoliday(false);
     setIsHolidayModalOpen(true);
   };
+
+  const handleDeleteHoliday = async (holiday: Holiday) => {
+    console.log("handleDeleteHoliday");
+
+    const response = await HttpClient.DELETE<Holiday>(`/api/Holiday/${holiday.id}`);
+
+    if (!response.isError && response.data) {
+      const deletedHoliday = response.data;
+      setHolidays(prev => prev.filter(h => h.id !== deletedHoliday.id));
+
+      toast({
+        title: "Holiday deleted successfully",
+        description: `"${deletedHoliday.name || holiday.name}" has been deleted.`,
+      });
+    } else {
+      toast({
+        title: "Failed to delete holiday",
+        description: "Something went wrong while deleting this holiday.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmDeleteHoliday = (holiday: Holiday) => {
+    handleDeleteHoliday(holiday);
+  };
+
 
   const handleSaveHoliday = async (holidayData: HolidayFormData) => {
     setSavingHoliday(true);
@@ -1111,93 +1139,7 @@ export default function Index() {
 
 
                 <TabsContent value="stats" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{taskStats.total}</div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Assigned</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{taskStats.assigned}</div>
-                        <p className="text-xs text-muted-foreground">
-                          {taskStats.unassigned} unassigned
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{taskStats.byStatus['in-progress'] || 0}</div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{taskStats.byStatus.done || 0}</div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Tasks by Status</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {Object.entries(taskStats.byStatus).map(([status, count]) => (
-                          <div key={status} className="flex items-center justify-between">
-                            <span className="capitalize">{status.replace('-', ' ')}</span>
-                            <div className="flex items-center gap-2">
-                              <div className="w-20 bg-muted rounded-full h-2">
-                                <div
-                                  className="h-2 rounded-full bg-primary"
-                                  style={{ width: `${(count / taskStats.total) * 100}%` }}
-                                />
-                              </div>
-                              <span className="text-sm font-medium w-8">{count}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Priority Distribution</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {Object.entries(taskStats.byPriority).map(([priority, count]) => (
-                          <div key={priority} className="flex items-center justify-between">
-                            <span className="capitalize">{priority}</span>
-                            <div className="flex items-center gap-2">
-                              <div className="w-20 bg-muted rounded-full h-2">
-                                <div
-                                  className="h-2 rounded-full bg-primary"
-                                  style={{ width: `${(count / taskStats.total) * 100}%` }}
-                                />
-                              </div>
-                              <span className="text-sm font-medium w-8">{count}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </div>
+                  <TaskStats taskStats={taskStats} />
                 </TabsContent>
 
                 <TabsContent value="reports" className="space-y-4">
@@ -1246,86 +1188,13 @@ export default function Index() {
                 </TabsContent>
 
                 <TabsContent value="products" className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold">Product Management</h2>
-                    <Button onClick={handleCreateProduct} className="gap-2">
-                      <FolderPlus className="h-4 w-4" />
-                      Add Product
-                    </Button>
-                  </div>
 
-                  <div className="flex items-center gap-2 mb-4">
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search products..."
-                      value={productSearch}
-                      onChange={(e) => setProductSearch(e.target.value)}
-                      className="max-w-sm"
-                    />
-                  </div>
-
-                  <div className="grid gap-4">
-
-                    {filteredProducts.map(product => (
-                      <Card key={product.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <h3 className="font-medium text-lg">{product.name}</h3>
-                                  <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
-                                  {/* <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground"> */}
-                                  {/* <span>Created: {project.createdAt.toLocaleDateString()}</span> */}
-                                  {/* <span>Created: {project.createdAt}</span> */}
-                                  {/* <span>Created: {project.createdAt.toLocaleDateString()}</span> */}
-                                  {/* <span>Tasks: {tasks.filter(t => t.projectId === project.id).length}</span> */}
-                                  {/* </div> */}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEditProduct(product)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-destructive hover:text-destructive"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          {/* This action cannot be undone. This will permanently delete the project "{product.name}". {projects.filter(t => t.productId === product.id).length > 0 ? 'This product has projects assigned to it and cannot be deleted.' : ''} */}
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() => confirmDeleteProduct(product)}
-                                        // disabled={products.filter(t => t.productId === product.id).length > 0}
-                                        >
-                                          Delete
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <ProductTable
+                    products={products}
+                    onCreateProduct={handleCreateProduct}
+                    onEditProduct={handleEditProduct}
+                    onDeleteProduct={confirmDeleteProduct}
+                  />
                 </TabsContent>
 
                 <TabsContent value="status" className="space-y-4">
@@ -1365,36 +1234,13 @@ export default function Index() {
 
 
                 <TabsContent value="holidays" className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold">Gazetted Holidays</h2>
-                    <Button onClick={handleCreateHoliday} className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Add Holiday
-                    </Button>
-                  </div>
+                  <HolidayTable
+                    holidays={holidays}
+                    onCreateHoliday={handleCreateHoliday}
+                    onEditHoliday={handleEditHoliday}
+                    onDeleteHoliday={confirmDeleteHoliday}
+                  />
 
-                  <div className="grid gap-4">
-                    {holidays.map(holiday => (
-                      <Card key={holiday.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-medium">{holiday.name}</h3>
-                              <p className="text-sm text-muted-foreground">{holiday.date.toLocaleDateString()}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="ghost" size="sm" onClick={() => handleEditHoliday(holiday)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setHolidays(prev => prev.filter(h => h.id !== holiday.id))}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
                 </TabsContent>
 
 
