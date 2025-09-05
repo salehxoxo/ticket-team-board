@@ -9,10 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox"; // ✅ import checkbox
 import { UserRole } from "@/types/task";
 
 export interface RoleFormData {
   name: string;
+  isManager: boolean; // ✅ new field
 }
 
 interface RoleModalProps {
@@ -34,6 +36,7 @@ export function RoleModal({
 }: RoleModalProps) {
   const [formData, setFormData] = useState<RoleFormData>({
     name: "",
+    isManager: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -43,10 +46,12 @@ export function RoleModal({
       if (role && !isCreating) {
         setFormData({
           name: role.name,
+          isManager: role.isManager ?? false,
         });
       } else {
         setFormData({
           name: "",
+          isManager: false,
         });
       }
       setErrors({});
@@ -101,6 +106,22 @@ export function RoleModal({
             {errors.name && (
               <span className="text-sm text-destructive">{errors.name}</span>
             )}
+          </div>
+
+          {/* Is Manager */}
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="isManager"
+              checked={formData.isManager}
+              onCheckedChange={(checked) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  isManager: checked === true,
+                }))
+              }
+              disabled={isSaving}
+            />
+            <Label htmlFor="isManager">Is Manager</Label>
           </div>
         </div>
 

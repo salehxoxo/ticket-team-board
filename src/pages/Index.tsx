@@ -12,7 +12,7 @@ import { UserModal, UserFormData } from "@/components/UserModal";
 import { ProjectModal, ProjectFormData } from "@/components/ProjectModal";
 import { ProductModal, ProductFormData } from "@/components/ProductModal";
 import { Reports } from "@/components/Reports";
-import { Task, TaskFormData, User, Project, Product, TaskPriority, UserRole, Holiday, HolidayFormData, Column } from "@/types/task";
+import { Task, TaskFormData, User, Project, Product, TaskPriority, UserRole, Holiday, HolidayFormData, Column, Manager } from "@/types/task";
 import { HolidayModal } from "@/components/HolidayModal";
 import { Plus, BarChart3, Calendar, Users, TrendingUp, UserPlus, Edit, Trash2, FolderPlus, LogOut, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -29,10 +29,11 @@ import { ProfileModal } from "@/components/UserProfile";
 import { StatusFormData, StatusModal } from "@/components/StatusModal";
 import { StatusTable } from "@/components/StatusTable";
 import { RoleTable } from "@/components/RoleTable";
-import { RoleModal } from "@/components/RoleModal";
+import { RoleFormData, RoleModal } from "@/components/RoleModal";
 import TaskStats from "@/components/TaskStats";
 import { ProductTable } from "@/components/ProductTable";
 import { HolidayTable } from "@/components/HolidayTable";
+import HourlyReport from "@/components/HourlyReport";
 
 
 
@@ -48,6 +49,7 @@ export default function Index() {
   const [products, setProducts] = useState<Product[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [managers, setManagers] = useState<Manager[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -157,7 +159,7 @@ export default function Index() {
         if (!roleResponse.isError && roleResponse.data) {
           setRoles(roleResponse.data);
         } else {
-          console.error("Failed to fetch users:", roleResponse.message);
+          console.error("Failed to fetch roles:", roleResponse.message);
         }
 
         // Fetch all holidays
@@ -190,6 +192,15 @@ export default function Index() {
           console.error("Failed to fetch task statuses:", statusresponse.message);
         }
 
+        //fetch managers
+        const managerResponse = await HttpClient.GET<Manager[]>("/api/User/managers");
+        if (!managerResponse.isError && managerResponse.data) {
+          setManagers(managerResponse.data);
+        } else {
+          console.error("Failed to fetch managers:", managerResponse.message);
+        }
+
+        console.log(managers);
 
 
 
@@ -222,36 +233,6 @@ export default function Index() {
       unassigned: tasks.filter(t => !t.assignee).length
     };
   }, [tasks]);
-
-  // const filteredTasks = useMemo(() => {
-  //   return tasks.filter(task =>
-  //     task.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
-  //     task.description.toLowerCase().includes(taskSearch.toLowerCase()) ||
-  //     task.id.toLowerCase().includes(taskSearch.toLowerCase())
-  //   );
-  // }, [tasks, taskSearch]);
-
-  // const filteredUsers = useMemo(() => {
-  //   return users.filter(user =>
-  //     user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-  //     user.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-  //     user.role.toLowerCase().includes(userSearch.toLowerCase())
-  //   );
-  // }, [users, userSearch]);
-
-  // const filteredProjects = useMemo(() => {
-  //   return projects.filter(project =>
-  //     project.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
-  //     project.description.toLowerCase().includes(projectSearch.toLowerCase())
-  //   );
-  // }, [projects, projectSearch]);
-
-  // const filteredProducts = useMemo(() => {
-  //   return products.filter(product =>
-  //     product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-  //     product.description.toLowerCase().includes(productSearch.toLowerCase())
-  //   );
-  // }, [products, productSearch]);
 
   const priorityMap: Record<TaskPriority, number> = {
     'low': 1,
@@ -479,6 +460,7 @@ export default function Index() {
       email: userData.email,
       password: userData.password,
       role_Id: roles.find(r => r.name === userData.role)?.id ?? null,
+      managerId: userData.managerId === "0" ? null : userData.managerId
     };
 
     if (isCreatingUser) {
@@ -511,6 +493,8 @@ export default function Index() {
         });
       }
     }
+
+    setRefreshKey(old => old + 1); // Trigger data refresh
 
     // Cleanup
     setIsUserModalOpen(false);
@@ -782,6 +766,19 @@ export default function Index() {
   const handleSaveStatus = async (statusData: StatusFormData) => {
     console.log("handleSaveStatus");
 
+    const exists = statuses.some(
+      s => s.name.toLowerCase() === statusData.name.toLowerCase()
+    );
+
+    if (exists) {
+      toast({
+        title: "Duplicate name",
+        description: "A status with this name already exists.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const statusPayload = {
       name: statusData.name,
       description: statusData.description,
@@ -835,6 +832,35 @@ export default function Index() {
     setIsCreatingStatus(false);
   };
 
+  const handleReorderStatuses = async (newStatuses: Column[]) => {
+    console.log("handleReorderStatuses");
+
+    const payload = newStatuses.map(s => ({
+      id: s.id,
+      sortOrder: s.sortOrder,
+    }));
+
+    const response = await HttpClient.PUT<Column[]>(
+      "/api/TasksStatus/reorder",
+      payload
+    );
+
+    if (!response.isError && response.data) {
+      setStatuses(response.data); // backend returns new ordered list
+      toast({
+        title: "Statuses reordered",
+        description: "The order of statuses has been updated.",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to update statuses order.",
+        variant: "destructive",
+      });
+    }
+    // setStatuses(newStatuses);
+  }
+
 
   //FOR ROLES
   const handleCreateRole = () => {
@@ -874,17 +900,20 @@ export default function Index() {
         description: `"${deletedRole.name || role.name}" has been deleted.`,
       });
     }
+
+
   };
 
   const confirmDeleteRole = (role: UserRole) => {
     handleDeleteRole(role);
   };
 
-  const handleSaveRole = async (roleData: { name: string }) => {
+  const handleSaveRole = async (roleData: RoleFormData) => {
     console.log("handleSaveRole");
 
     const rolePayload = {
       name: roleData.name,
+      isManager: roleData.isManager
     };
 
     if (isCreatingRole) {
@@ -1150,6 +1179,15 @@ export default function Index() {
                   />
                 </TabsContent>
 
+                <TabsContent value="hourlyreport" className="space-y-4">
+                  <HourlyReport
+                    tasks={tasks}
+                    users={users}
+                    projects={projects}
+                    products={products}
+                  />
+                </TabsContent>
+
                 <TabsContent value="users" className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold">User Management</h2>
@@ -1211,6 +1249,7 @@ export default function Index() {
                     statuses={statuses}
                     onEditStatus={handleEditStatus}
                     onDeleteStatus={confirmDeleteStatus}
+                    onReorderStatuses={handleReorderStatuses}
                   />
 
                 </TabsContent>
@@ -1264,7 +1303,7 @@ export default function Index() {
           }}
           onSave={handleSaveTask}
           currentUser={currentUser}
-          availableUsers={users}
+          availableUsers={users.filter(u => u.managerId === currentUser.id)}
           availableProjects={projects}
           holidays={holidays}
           isCreating={isCreatingTask}
@@ -1276,6 +1315,7 @@ export default function Index() {
       <UserModal
         user={selectedUser}
         roles={roles}
+        managers={managers}
         isOpen={isUserModalOpen}
         onClose={() => {
           if (!savingUser) {

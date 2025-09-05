@@ -41,20 +41,20 @@ type SortDirection = 'asc' | 'desc';
 // };
 
 const priorityConfig = {
-  low: { 
-    label: 'Low', 
+  low: {
+    label: 'Low',
     className: 'bg-priority-low text-priority-low-foreground'
   },
-  medium: { 
-    label: 'Medium', 
+  medium: {
+    label: 'Medium',
     className: 'bg-priority-medium text-priority-medium-foreground'
   },
-  high: { 
-    label: 'High', 
+  high: {
+    label: 'High',
     className: 'bg-priority-high text-priority-high-foreground'
   },
-  urgent: { 
-    label: 'Urgent', 
+  urgent: {
+    label: 'Urgent',
     className: 'bg-priority-urgent text-priority-urgent-foreground animate-pulse'
   }
 };
@@ -71,11 +71,14 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
   const filteredAndSortedTasks = useMemo(() => {
     let filtered = tasks.filter(task => {
       const matchesSearch = task.name.toLowerCase().includes(search.toLowerCase()) ||
-                           task.description.toLowerCase().includes(search.toLowerCase()) ||
-                           task.id.toLowerCase().includes(search.toLowerCase());
+        task.description.toLowerCase().includes(search.toLowerCase()) ||
+        task.id.toLowerCase().includes(search.toLowerCase()) ||
+        task.project.toLowerCase().includes(search.toLowerCase()) ||
+        task.assignee && task.assignee.toLowerCase().includes(search.toLowerCase()) ||
+        task.assignor.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || task.status === statusFilter;
       const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
-      
+
       return matchesSearch && matchesStatus && matchesPriority;
     });
 
@@ -147,10 +150,10 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
     </Button>
   );
 
-    const getStatusColor = (status: string) => {
-  const col = columns.find((c) => c.name === status);
-  return col?.color || "#6b7280"; // default gray if not found
-};
+  const getStatusColor = (status: string) => {
+    const col = columns.find((c) => c.name === status);
+    return col?.color || "#6b7280"; // default gray if not found
+  };
 
   return (
     <div className="space-y-4">
@@ -165,7 +168,7 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
             className="pl-10"
           />
         </div>
-        
+
         {/* <Select value={statusFilter} onValueChange={(value: string | "all") => setStatusFilter(value)}>
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="Status" />
@@ -180,21 +183,21 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
         </Select> */}
 
         <Select
-        value={statusFilter}
-        onValueChange={(value: string | "all") => setStatusFilter(value)}
+          value={statusFilter}
+          onValueChange={(value: string | "all") => setStatusFilter(value)}
         >
-        <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
+          </SelectTrigger>
+          <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
             {columns.map((col) => (
-            <SelectItem key={col.id} value={col.name}>
+              <SelectItem key={col.id} value={col.name}>
                 {col.name}
-            </SelectItem>
+              </SelectItem>
             ))}
-        </SelectContent>
-    </Select>
+          </SelectContent>
+        </Select>
 
 
         <Select value={priorityFilter} onValueChange={(value: TaskPriority | "all") => setPriorityFilter(value)}>
@@ -226,6 +229,7 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
                 <SortButton field="priority">Priority</SortButton>
               </TableHead>
               <TableHead>Assignee</TableHead>
+              <TableHead>Assignor</TableHead>
               <TableHead>
                 <SortButton field="project">Project</SortButton>
               </TableHead>
@@ -243,11 +247,11 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedTasks.map((task) => { 
+              paginatedTasks.map((task) => {
                 const daysUntilDue = differenceInDays(task.endDate, new Date());
                 const isOverdue = daysUntilDue < 0 && task.status !== 'done';
                 const isDueSoon = daysUntilDue <= 2 && daysUntilDue >= 0 && task.status !== 'done';
-                
+
                 return (
                   <TableRow key={task.id} className="hover:bg-muted/50">
                     <TableCell>
@@ -255,7 +259,7 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{task.name}</span>
                           {(isOverdue || isDueSoon) && (
-                            <AlertTriangle className={cn("h-3 w-3", 
+                            <AlertTriangle className={cn("h-3 w-3",
                               isOverdue ? "text-destructive" : "text-orange-500"
                             )} />
                           )}
@@ -302,24 +306,37 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
                         <span className="text-sm text-muted-foreground">Unassigned</span>
                       )}
                     </TableCell>
+
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${task.assignor}`} />
+                          <AvatarFallback className="text-xs">
+                            {task.assignor.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm">{task.assignor}</span>
+                      </div>
+                    </TableCell>
+
                     <TableCell>
                       <span className="text-sm font-medium">{task.project}</span>
                     </TableCell>
                     <TableCell>
-                      <span className={cn("text-sm font-medium", 
+                      <span className={cn("text-sm font-medium",
                         isOverdue ? "text-destructive" : isDueSoon ? "text-orange-500" : "text-foreground"
                       )}>
                         {task.endDate.toLocaleDateString()}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onView(task)}
-                        >
-                          <Eye className="h-4 w-4 text-blue-500" />
-                        </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onView(task)}
+                      >
+                        <Eye className="h-4 w-4 text-blue-500" />
+                      </Button>
                       {canEdit && (
                         <Button
                           variant="ghost"
@@ -344,7 +361,7 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
           <p className="text-sm text-muted-foreground">
             Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedTasks.length)} of {filteredAndSortedTasks.length} tasks
           </p>
-          
+
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -354,7 +371,7 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
             >
               Previous
             </Button>
-            
+
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const page = i + 1;
@@ -374,7 +391,7 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
                 return null;
               })}
             </div>
-            
+
             <Button
               variant="outline"
               size="sm"

@@ -26,8 +26,8 @@ export const Reports = ({ tasks, users }: ReportsProps) => {
   // Tasks by assignee
   const assigneeData = users.map(user => ({
     name: user.name,
-    tasks: tasks.filter(task => task.assignee?.id === user.id).length,
-    completed: tasks.filter(task => task.assignee?.id === user.id && task.status === 'done').length
+    tasks: tasks.filter(task => task.assigneeId === user.id).length,
+    completed: tasks.filter(task => task.assigneeId === user.id && task.status === 'done').length
   })).filter(item => item.tasks > 0);
 
   // Priority distribution for pie chart
@@ -141,17 +141,17 @@ export const Reports = ({ tasks, users }: ReportsProps) => {
                   <XAxis dataKey="day" />
                   <YAxis />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="completed" 
-                    stroke="hsl(var(--primary))" 
+                  <Line
+                    type="monotone"
+                    dataKey="completed"
+                    stroke="hsl(var(--primary))"
                     strokeWidth={2}
                     dot={{ fill: "hsl(var(--primary))" }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="created" 
-                    stroke="hsl(var(--muted-foreground))" 
+                  <Line
+                    type="monotone"
+                    dataKey="created"
+                    stroke="hsl(var(--muted-foreground))"
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     dot={{ fill: "hsl(var(--muted-foreground))" }}
@@ -190,8 +190,8 @@ export const Reports = ({ tasks, users }: ReportsProps) => {
             <div className="flex flex-wrap gap-2 mt-4">
               {priorityData.map((item) => (
                 <div key={item.name} className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: item.color }}
                   />
                   <span className="text-sm">{item.name}: {item.value}</span>
@@ -222,6 +222,7 @@ export const Reports = ({ tasks, users }: ReportsProps) => {
           </CardContent>
         </Card>
 
+        {/* Team Workload */}
         <Card>
           <CardHeader>
             <CardTitle>Team Workload</CardTitle>
@@ -229,21 +230,49 @@ export const Reports = ({ tasks, users }: ReportsProps) => {
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={assigneeData} layout="horizontal">
+                <BarChart
+                  data={users
+                    .map(user => {
+                      const total = tasks.filter(task => task.assigneeId === user.id).length;
+                      const completed = tasks.filter(
+                        task => task.assigneeId === user.id && task.status === "done"
+                      ).length;
+                      return {
+                        name: user.name,
+                        completed,
+                        remaining: total - completed,
+                      };
+                    })
+                    .filter(item => item.completed + item.remaining > 0)}
+                  layout="vertical"
+                >
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" width={80} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="tasks" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="completed" fill="hsl(var(--primary-foreground))" radius={[0, 4, 4, 0]} />
+                  {/* Remaining tasks (gray background) */}
+                  <Bar
+                    dataKey="remaining"
+                    stackId="a"
+                    fill="hsl(var(--muted-foreground))"
+                    radius={[0, 4, 4, 0]}
+                  />
+                  {/* Completed tasks (blue foreground) */}
+                  <Bar
+                    dataKey="completed"
+                    stackId="a"
+                    fill="hsl(var(--primary))"
+                    radius={[0, 4, 4, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>
+
       </div>
 
       {/* Team Performance Table */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Team Performance Summary</CardTitle>
         </CardHeader>
@@ -294,7 +323,7 @@ export const Reports = ({ tasks, users }: ReportsProps) => {
             })}
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };

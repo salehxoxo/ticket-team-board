@@ -9,44 +9,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Clock, MessageSquare, Plus, User, Calendar, AlertTriangle } from "lucide-react";
-import { Column, Task, User as UserType } from "@/types/task";
+import { Column, Task, TimeLog, Comment, User as UserType } from "@/types/task";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "react-router-dom";
 import { HttpClient } from "@/api/communicator";
-
-interface Comment {
-  id: string;
-  taskId: string;
-  userId: string;
-  userName: string;
-  comment: string;
-  hours: number;
-  commentedAt: Date;
-}
-
-interface TimeLog {
-  id: string;
-  taskId: string;
-  userId: string;
-  userName: string;
-  description: string;
-  hours: number;
-  loggedAt: Date;
-}
 
 export default function TaskDetails() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  
-const location = useLocation();
- const { task, column } = location.state as { task: Task; column: Column };
+
+  const location = useLocation();
+  const { task, column } = location.state as { task: Task; column: Column };
 
 
   const [comments, setComments] = useState<Comment[]>([]);
-   const [timeLogs, setTimeLogs] = useState<TimeLog[]>([]);
+  const [timeLogs, setTimeLogs] = useState<TimeLog[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [newTimeLog, setNewTimeLog] = useState({ description: '', hours: '' });
+  // const [newTimeLog, setNewTimeLog] = useState({ description: '', hours: '' });
+  const [newTimeLog, setNewTimeLog] = useState({ description: '', hours: '', workDate: new Date() });
+
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [isAddingTimeLog, setIsAddingTimeLog] = useState(false);
 
@@ -68,131 +50,144 @@ const location = useLocation();
 
 
   useEffect(() => {
-  const fetchLogs = async () => {
-    // if (!taskId) return;
+    const fetchLogs = async () => {
+      // if (!taskId) return;
 
-    const response = await HttpClient.GET<TimeLog[]>(`/api/TaskLog/${task.id}`);
+      const response = await HttpClient.GET<TimeLog[]>(`/api/TaskLog/${task.id}`);
 
-    if (!response.isError && response.data) {
-      const convertedLogs = response.data.map(log => ({
-        ...log,
-        loggedAt: new Date(log.loggedAt)
-      }));
-      setTimeLogs(convertedLogs);
-    } else {
-      console.error("Failed to fetch logs:", response.message);
-    }
-  };
+      if (!response.isError && response.data) {
+        const convertedLogs = response.data.map(log => ({
+          ...log,
+          loggedAt: new Date(log.loggedAt),
+          workDate: new Date(log.workDate)  // <-- convert workDate to Date object
+        }));
+        setTimeLogs(convertedLogs);
+      } else {
+        console.error("Failed to fetch logs:", response.message);
+      }
+    };
 
-  const fetchComments = async () => {
-    // if (!taskId) return;
+    const fetchComments = async () => {
+      // if (!taskId) return;
 
-    const response = await HttpClient.GET<Comment[]>(`/api/TaskComment/${task.id}`);
+      const response = await HttpClient.GET<Comment[]>(`/api/TaskComment/${task.id}`);
 
-    if (!response.isError && response.data) {
-      const convertedComments = response.data.map(comment => ({
-        ...comment,
-        commentedAt: new Date(comment.commentedAt)
-      }));
-      setComments(convertedComments);
-    } else {
-      console.error("Failed to fetch logs:", response.message);
-    }
-  };
+      if (!response.isError && response.data) {
+        const convertedComments = response.data.map(comment => ({
+          ...comment,
+          commentedAt: new Date(comment.commentedAt)
+        }));
+        setComments(convertedComments);
+      } else {
+        console.error("Failed to fetch logs:", response.message);
+      }
+    };
 
-  fetchLogs();
-  fetchComments();
-}, [task.id]);
+    fetchLogs();
+    fetchComments();
+  }, [task.id]);
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    
+
     setIsAddingComment(true);
     try {
-    const payload = {
-      taskId: task.id,
-      userId: currentUser.id,
-      comment: newComment
-    };
-
-    const response = await HttpClient.POST<Comment>("/api/TaskComment", payload);
-
-    if (!response.isError && response.data) {
-      const addedComment = {
-        ...response.data,
-        commentedAt: new Date(response.data.commentedAt)
+      const payload = {
+        taskId: task.id,
+        userId: currentUser.id,
+        comment: newComment
       };
 
-      setComments(prev => [...prev, addedComment]);
-      setNewComment('');
+      const response = await HttpClient.POST<Comment>("/api/TaskComment", payload);
 
-      toast({
-        title: "Comment added"
-      });
-    } else {
+      if (!response.isError && response.data) {
+        const addedComment = {
+          ...response.data,
+          commentedAt: new Date(response.data.commentedAt)
+        };
+
+        setComments(prev => [...prev, addedComment]);
+        setNewComment('');
+
+        toast({
+          title: "Comment added"
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed to log time",
+          description: response.message || "Something went wrong.",
+        });
+      }
+    } catch (error) {
+      console.error("comment error:", error);
       toast({
         variant: "destructive",
-        title: "Failed to log time",
-        description: response.message || "Something went wrong.",
+        title: "Error",
+        description: "An error occurred while commenting.",
       });
+    } finally {
+      setIsAddingComment(false);
     }
-  } catch (error) {
-    console.error("comment error:", error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "An error occurred while commenting.",
-    });
-  } finally {
-    setIsAddingComment(false);
-  }
   };
 
   const handleAddTimeLog = async () => {
 
     if (!newTimeLog.description.trim() || !newTimeLog.hours) return;
 
-  setIsAddingTimeLog(true);
-  try {
-    const payload = {
-      taskId: task.id,
-      userId: currentUser.id,
-      description: newTimeLog.description,
-      hours: parseFloat(newTimeLog.hours)
-    };
-
-    const response = await HttpClient.POST<TimeLog>("/api/TaskLog", payload);
-
-    if (!response.isError && response.data) {
-      const addedLog = {
-        ...response.data,
-        loggedAt: new Date(response.data.loggedAt)
-      };
-
-      setTimeLogs(prev => [...prev, addedLog]);
-      setNewTimeLog({ description: '', hours: '' });
-
-      toast({
-        title: "Time logged",
-        description: `${addedLog.hours} hours logged successfully.`,
-      });
-    } else {
+    // Validate workDate
+    if (newTimeLog.workDate < task.startDate || newTimeLog.workDate > task.endDate) {
       toast({
         variant: "destructive",
-        title: "Failed to log time",
-        description: response.message || "Something went wrong.",
+        title: "Invalid work date",
+        description: "Work date must be within the task's start and end dates.",
       });
+      return;
     }
-  } catch (error) {
-    console.error("Log time error:", error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "An error occurred while logging time.",
-    });
-  } finally {
-    setIsAddingTimeLog(false);
-  }
+
+    setIsAddingTimeLog(true);
+    try {
+      const payload = {
+        taskId: task.id,
+        userId: currentUser.id,
+        description: newTimeLog.description,
+        hours: parseFloat(newTimeLog.hours),
+        workDate: newTimeLog.workDate // <-- new field
+      };
+
+      const response = await HttpClient.POST<TimeLog>("/api/TaskLog", payload);
+
+      if (!response.isError && response.data) {
+        const addedLog = {
+          ...response.data,
+          loggedAt: new Date(response.data.loggedAt),
+          workDate: new Date(response.data.workDate)  // <-- convert workDate to Date object
+        };
+
+        setTimeLogs(prev => [...prev, addedLog]);
+        setNewTimeLog({ description: '', hours: '', workDate: new Date() });
+
+        toast({
+          title: "Time logged",
+          description: `${addedLog.hours} hours logged successfully.`,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed to log time",
+          description: response.message || "Something went wrong.",
+        });
+      }
+    } catch (error) {
+      console.error("Log time error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An error occurred while logging time.",
+      });
+    } finally {
+      setIsAddingTimeLog(false);
+    }
   };
 
   const totalLoggedHours = timeLogs.reduce((sum, log) => sum + log.hours, 0);
@@ -202,9 +197,9 @@ const location = useLocation();
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate('/')}
               className="gap-2"
             >
@@ -236,7 +231,7 @@ const location = useLocation();
                     {/* <Badge className={`${statusConfig[task.status].bg} ${statusConfig[task.status].text}`}>
                       {statusConfig[task.status].label}
                     </Badge> */}
-                    <Badge style={{ backgroundColor:  `${column.color}33`, color: "black" }}>
+                    <Badge style={{ backgroundColor: `${column.color}33`, color: "black" }}>
                       {column.name}
                     </Badge>
 
@@ -266,9 +261,9 @@ const location = useLocation();
                     <div className="font-medium">{task.estimatedHours}h</div>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-3">
                     <User className="h-4 w-4 text-muted-foreground" />
@@ -288,7 +283,7 @@ const location = useLocation();
                       </div>
                     </div>
                   </div>
-                  
+
                   {task.assignee && (
                     <div className="flex items-center gap-3">
                       <User className="h-4 w-4 text-muted-foreground" />
@@ -338,7 +333,7 @@ const location = useLocation();
                     <p className="text-sm">{comment.comment}</p>
                   </div>
                 ))}
-                
+
                 <div className="space-y-3">
                   <Label htmlFor="comment">Add a comment</Label>
                   <Textarea
@@ -348,7 +343,7 @@ const location = useLocation();
                     onChange={(e) => setNewComment(e.target.value)}
                     disabled={isAddingComment}
                   />
-                  <Button 
+                  <Button
                     onClick={handleAddComment}
                     disabled={!newComment.trim() || isAddingComment}
                     className="gap-2"
@@ -382,13 +377,13 @@ const location = useLocation();
                     of {task.estimatedHours}h estimated
                   </div>
                   <div className="w-full bg-background rounded-full h-2 mt-2">
-                    <div 
+                    <div
                       className="bg-primary h-2 rounded-full transition-all"
                       style={{ width: `${Math.min((totalLoggedHours / task.estimatedHours) * 100, 100)}%` }}
                     />
                   </div>
                 </div>
-                
+
                 {timeLogs.map((log) => (
                   <div key={log.id} className="border rounded-lg p-3 space-y-2">
                     <div className="flex items-center justify-between">
@@ -409,9 +404,9 @@ const location = useLocation();
                     <p className="text-xs text-muted-foreground">{log.loggedAt.toLocaleString()}</p>
                   </div>
                 ))}
-                
+
                 <Separator />
-                
+
                 <div className="space-y-3">
                   <Label>Log Time</Label>
                   <div className="grid grid-cols-3 gap-2">
@@ -435,7 +430,26 @@ const location = useLocation();
                       />
                     </div>
                   </div>
-                  <Button 
+
+
+                  {/* Work Date Picker */}
+                  <div>
+                    <Input
+                      type="date"
+                      value={newTimeLog.workDate.toISOString().split('T')[0]}
+                      min={task.startDate.toISOString().split('T')[0]}   // earliest allowed
+                      max={task.endDate.toISOString().split('T')[0]}     // latest allowed
+                      onChange={(e) =>
+                        setNewTimeLog(prev => ({ ...prev, workDate: new Date(e.target.value) }))
+                      }
+                      disabled={isAddingTimeLog}
+                    />
+                  </div>
+
+
+
+
+                  <Button
                     onClick={handleAddTimeLog}
                     disabled={!newTimeLog.description.trim() || !newTimeLog.hours || isAddingTimeLog}
                     className="w-full gap-2"

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FolderKanban, List, BarChart3, FileBarChart, Users, Folder, Package, Calendar ,Activity, Layers} from "lucide-react";
+import { FolderKanban, List, BarChart3, FileBarChart, Users, Folder, Package, Calendar, Activity, Layers } from "lucide-react";
 import {
   Sidebar,
   SidebarTrigger,
@@ -24,6 +24,7 @@ export function TaskSidebar({ currentUser, activeTab, onTabChange }: TaskSidebar
     { title: "List", value: "list", icon: List },
     { title: "Stats", value: "stats", icon: BarChart3 },
     { title: "Reports", value: "reports", icon: FileBarChart },
+    { title: "Hourly Report", value: "hourlyreport", icon: FileBarChart }
   ];
 
   const managerAdminItems = [
@@ -59,8 +60,8 @@ export function TaskSidebar({ currentUser, activeTab, onTabChange }: TaskSidebar
       {/* Sidebar itself */}
       <Sidebar collapsible="icon">
         <div className="p-2 border-b">
-        <SidebarTrigger />
-      </div>
+          <SidebarTrigger />
+        </div>
         <SidebarContent>
           <SidebarGroup>
             {/* <SidebarGroupLabel>Task Management</SidebarGroupLabel> */}

@@ -34,13 +34,15 @@ export function ProjectTable({ projects, products, onEditProject, onDeleteProjec
       return (
         project.name.toLowerCase().includes(search.toLowerCase()) ||
         project.description.toLowerCase().includes(search.toLowerCase()) ||
-        productName.toLowerCase().includes(search.toLowerCase())
+        productName.toLowerCase().includes(search.toLowerCase()) ||
+        project.startDate.toLocaleDateString().includes(search.toLowerCase()) ||
+        project.endDate.toLocaleDateString().includes(search.toLowerCase())
       );
     });
 
     filtered.sort((a, b) => {
       let aValue: any;
-        let bValue: any;
+      let bValue: any;
       switch (sortField) {
         case "name":
           aValue = a.name.toLowerCase();

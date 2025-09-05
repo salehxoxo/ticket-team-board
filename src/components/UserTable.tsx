@@ -18,7 +18,7 @@ interface UserTableProps {
 type SortField = "fullName" | "email" | "role";
 type SortDirection = "asc" | "desc";
 
-export function UserTable({ users, onEditUser, onDeleteUser,roles }: UserTableProps) {
+export function UserTable({ users, onEditUser, onDeleteUser, roles }: UserTableProps) {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string | "all">("all");
   const [sortField, setSortField] = useState<SortField>("fullName");
@@ -31,7 +31,8 @@ export function UserTable({ users, onEditUser, onDeleteUser,roles }: UserTablePr
       const matchesSearch =
         user.full_name.toLowerCase().includes(search.toLowerCase()) ||
         user.email.toLowerCase().includes(search.toLowerCase()) ||
-        user.role.toLowerCase().includes(search.toLowerCase());
+        user.role.toLowerCase().includes(search.toLowerCase()) ||
+        user.managerName?.toLowerCase().includes(search.toLowerCase());
       const matchesRole = roleFilter === "all" || user.role === roleFilter;
 
       return matchesSearch && matchesRole;
@@ -122,21 +123,21 @@ export function UserTable({ users, onEditUser, onDeleteUser,roles }: UserTablePr
           </SelectContent>
         </Select> */}
         <Select
-            value={roleFilter}
-            onValueChange={(value: string | "all") => setRoleFilter(value)}
-            >
-            <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                {roles.map((role) => (
-                <SelectItem key={role.id} value={role.name}>
-                    {role.name}
-                </SelectItem>
-                ))}
-            </SelectContent>
-            </Select>
+          value={roleFilter}
+          onValueChange={(value: string | "all") => setRoleFilter(value)}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
+            {roles.map((role) => (
+              <SelectItem key={role.id} value={role.name}>
+                {role.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
       </div>
 
@@ -148,6 +149,7 @@ export function UserTable({ users, onEditUser, onDeleteUser,roles }: UserTablePr
               <TableHead><SortButton field="fullName">Full Name</SortButton></TableHead>
               <TableHead><SortButton field="email">Email</SortButton></TableHead>
               <TableHead><SortButton field="role">Role</SortButton></TableHead>
+              <TableHead><SortButton field="role">Manager</SortButton></TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -174,6 +176,7 @@ export function UserTable({ users, onEditUser, onDeleteUser,roles }: UserTablePr
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role}</TableCell>
+                  <TableCell>{user.managerName}</TableCell>
                   <TableCell className="text-right flex justify-end gap-2">
                     <Button
                       variant="ghost"

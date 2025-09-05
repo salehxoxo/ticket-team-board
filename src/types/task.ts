@@ -7,12 +7,19 @@ export interface Column {
   name: string;
   description: string;
   color: string; // e.g., "bg-blue-500"
+  sortOrder: number;
 }
 // export type UserRole = 'admin' | 'manager' | 'developer';
 
 export interface UserRole {
   id: number;
   name: string;  // e.g., "admin"
+  isManager: boolean;
+}
+
+export interface Manager {
+  managerId: string;
+  managerName: string;
 }
 
 // export interface User {
@@ -29,6 +36,8 @@ export interface User {
   role: string;
   email: string;
   created_at: string;
+  managerId?: string | null;
+  managerName?: string | null;
 }
 
 export interface Project {
@@ -113,4 +122,26 @@ export interface Holiday {
 export interface HolidayFormData {
   name: string;
   date: Date;
+}
+
+
+export interface Comment {
+  id: string;
+  taskId: string;
+  userId: string;
+  userName: string;
+  comment: string;
+  hours: number;
+  commentedAt: Date;
+}
+
+export interface TimeLog {
+  id: string;
+  taskId: string;
+  userId: string;
+  userName: string;
+  description: string;
+  hours: number;
+  workDate: Date;   // <-- new field (actual work day)
+  loggedAt: Date;
 }

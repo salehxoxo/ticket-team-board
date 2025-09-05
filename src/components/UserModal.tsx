@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, UserRole } from "@/types/task";
+import { Manager, User, UserRole } from "@/types/task";
 import { Save, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,11 +16,13 @@ export interface UserFormData {
   email: string;
   password: string;
   role: string;
+  managerId: string | null;
 }
 
 interface UserModalProps {
   user: User | null;
   roles: UserRole[];
+  managers: Manager[];
   isOpen: boolean;
   onClose: () => void;
   onSave: (userData: UserFormData) => void;
@@ -34,12 +36,13 @@ interface UserModalProps {
 //   { value: 'admin', label: 'Admin' }
 // ];
 
-export function UserModal({ 
+export function UserModal({
   user,
-  roles, 
-  isOpen, 
-  onClose, 
-  onSave, 
+  roles,
+  managers,
+  isOpen,
+  onClose,
+  onSave,
   isCreating = false,
   isSaving = false
 }: UserModalProps) {
@@ -48,7 +51,8 @@ export function UserModal({
     name: '',
     email: '',
     password: '',
-    role: 'developer'
+    role: 'developer',
+    managerId: null
   });
 
   const [errors, setErrors] = useState<Partial<UserFormData>>({});
@@ -60,7 +64,8 @@ export function UserModal({
         name: user.name,
         email: user.email,
         password: '', // Password should not be pre-filled
-        role: user.role
+        role: user.role,
+        managerId: user.managerId || null
       });
     } else if (isCreating) {
       setFormData({
@@ -68,7 +73,8 @@ export function UserModal({
         name: '',
         email: '',
         password: '',
-        role: 'developer'
+        role: 'developer',
+        managerId: null
       });
     }
     setErrors({});
@@ -76,7 +82,7 @@ export function UserModal({
 
   const validateForm = (): boolean => {
     const newErrors: Partial<UserFormData> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
@@ -86,8 +92,8 @@ export function UserModal({
       newErrors.email = 'Please enter a valid email';
     }
 
-    if(!formData.full_name.trim()) {
-      newErrors.full_name = 'Full name is required'; 
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = 'Full name is required';
     }
     if (!formData.password.trim()) {
       newErrors.password = 'Password is required';
@@ -96,6 +102,10 @@ export function UserModal({
     }
 
 
+    // Manager validation
+    if (!formData.managerId) {
+      newErrors.managerId = 'Please select a manager (or choose None explicitly)';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -182,7 +192,7 @@ export function UserModal({
               </p>
             )}
           </div>
-          
+
 
           {/* Email */}
           <div className="space-y-2">
@@ -241,9 +251,9 @@ export function UserModal({
                     <div className="flex items-center gap-2">
                       <div className={cn(
                         "w-2 h-2 rounded-full",
-                        role.name === 'manager' ? "bg-blue-500" : 
-                        role.name === 'admin' ? "bg-green-500" : 
-                        "bg-gray-500"
+                        role.name === 'manager' ? "bg-blue-500" :
+                          role.name === 'admin' ? "bg-green-500" :
+                            "bg-gray-500"
                       )} />
                       {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
                     </div>
@@ -253,6 +263,54 @@ export function UserModal({
 
             </Select>
           </div>
+
+          {/* Manager */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Manager *</Label>
+            <Select
+              value={formData.managerId ?? ""}
+              onValueChange={(value: string) =>
+                setFormData(prev => ({ ...prev, managerId: value }))
+              }
+            >
+              <SelectTrigger className={cn(errors.managerId && "border-destructive")}>
+                <SelectValue placeholder="Select a manager..." />
+              </SelectTrigger>
+              <SelectContent>
+                {/* Explicit "None" option */}
+                <SelectItem value="0">None</SelectItem>
+
+                {managers.map(m => (
+                  <SelectItem key={m.managerId} value={m.managerId}>
+                    {m.managerName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Error for not selecting anything */}
+            {errors.managerId && (
+              <p className="text-sm text-destructive flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                {errors.managerId}
+              </p>
+            )}
+
+            {/* Warning if 'None' is selected */}
+            {/* {formData.managerId === "0" && (
+              <p className="text-sm text-yellow-600 flex items-center gap-1 mt-1">
+                <AlertTriangle className="h-3 w-3 text-yellow-600" />
+                User with no manager will be considered a manager themselves.
+              </p>
+            )} */}
+          </div>
+
+
+
+
+
+
+
         </div>
 
         <div className="flex justify-end gap-2 pt-4 border-t">
