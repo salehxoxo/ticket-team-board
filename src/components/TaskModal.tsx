@@ -491,7 +491,7 @@ export function TaskModal({
               return (
                 <div className="p-3 border border-yellow-200 bg-yellow-50 rounded-lg">
                   <p className="text-sm text-yellow-800">
-                    <strong>Warning:</strong> Task dates should be within project range ({format(selectedProject.startDate, "PPP")} - {format(selectedProject.endDate, "PPP")})
+                    <strong>Error:</strong> Task dates should be within project range ({format(selectedProject.startDate, "PPP")} - {format(selectedProject.endDate, "PPP")})
                   </p>
                 </div>
               );

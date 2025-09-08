@@ -13,15 +13,43 @@ interface ReportsProps {
 
 export const Reports = ({ tasks, users }: ReportsProps) => {
   // Task completion trend (mock data for last 7 days)
-  const completionTrend = [
-    { day: 'Mon', completed: 3, created: 5 },
-    { day: 'Tue', completed: 2, created: 3 },
-    { day: 'Wed', completed: 4, created: 2 },
-    { day: 'Thu', completed: 1, created: 4 },
-    { day: 'Fri', completed: 5, created: 3 },
-    { day: 'Sat', completed: 2, created: 1 },
-    { day: 'Sun', completed: 3, created: 2 }
-  ];
+  // const completionTrend = [
+  //   { day: 'Mon', completed: 3, created: 5 },
+  //   { day: 'Tue', completed: 2, created: 3 },
+  //   { day: 'Wed', completed: 4, created: 2 },
+  //   { day: 'Thu', completed: 1, created: 4 },
+  //   { day: 'Fri', completed: 5, created: 3 },
+  //   { day: 'Sat', completed: 2, created: 1 },
+  //   { day: 'Sun', completed: 3, created: 2 }
+  // ];
+
+  // Task completion trend (real data for last 7 days)
+  const today = new Date();
+  const last7Days = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (6 - i)); // oldest → newest
+    return d;
+  });
+
+  const completionTrend = last7Days.map((date) => {
+    const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+
+    const dayTasks = tasks.filter((task) => {
+      const createdDate = new Date(task.created_at);
+      return (
+        createdDate.getFullYear() === date.getFullYear() &&
+        createdDate.getMonth() === date.getMonth() &&
+        createdDate.getDate() === date.getDate()
+      );
+    });
+
+    return {
+      day: dayName,
+      created: dayTasks.length,
+      completed: dayTasks.filter((t) => t.status.toLowerCase() === "done").length,
+    };
+  });
+
 
   // Tasks by assignee
   const assigneeData = users.map(user => ({
