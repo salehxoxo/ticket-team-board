@@ -58,10 +58,60 @@ export const useDataFetching = () => {
                     project_start: new Date(task.project_start),
                     project_end: new Date(task.project_end)
                 })));
+            } else {
+                console.error("Failed to fetch tasks:", taskResponse.message);
             }
 
             if (!userResponse.isError && userResponse.data) {
                 setUsers(userResponse.data);
+            } else {
+                console.error("Failed to fetch users:", userResponse.message);
+            }
+
+            if (!projectResponse.isError && projectResponse.data) {
+                const convertedProjects = projectResponse.data.map(project => ({
+                    ...project,
+                    startDate: new Date(project.startDate),
+                    endDate: new Date(project.endDate),
+                    createdAt: new Date(project.createdAt)
+                }));
+                setProjects(convertedProjects);
+            } else {
+                console.error("Failed to fetch projects:", projectResponse.message);
+            }
+
+            if (!roleResponse.isError && roleResponse.data) {
+                setRoles(roleResponse.data);
+            } else {
+                console.error("Failed to fetch roles:", roleResponse.message);
+            }
+
+            if (!holidayResponse.isError && holidayResponse.data) {
+                const convertedHolidays = holidayResponse.data.map(holiday => ({
+                    ...holiday,
+                    date: new Date(holiday.date),
+                }));
+                setHolidays(convertedHolidays);
+            } else {
+                console.error("Failed to fetch holidays:", holidayResponse.message);
+            }
+
+            if (!productResponse.isError && productResponse.data) {
+                setProducts(productResponse.data);
+            } else {
+                console.error("Failed to fetch products:", productResponse.message);
+            }
+
+            if (!statusResponse.isError && statusResponse.data) {
+                setStatuses(statusResponse.data);
+            } else {
+                console.error("Failed to fetch task statuses:", statusResponse.message);
+            }
+
+            if (!managerResponse.isError && managerResponse.data) {
+                setManagers(managerResponse.data);
+            } else {
+                console.error("Failed to fetch managers:", managerResponse.message);
             }
 
             // ... process other responses similarly

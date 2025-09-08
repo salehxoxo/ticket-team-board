@@ -34,6 +34,7 @@ import TaskStats from "@/components/TaskStats";
 import { ProductTable } from "@/components/ProductTable";
 import { HolidayTable } from "@/components/HolidayTable";
 import HourlyReport from "@/components/HourlyReport";
+import { useDataFetching } from "@/hooks/useDataFetching";
 
 
 
@@ -42,14 +43,14 @@ export default function Index() {
     return localStorage.getItem("activeTab") || "kanban";
   });
 
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [statuses, setStatuses] = useState<Column[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [roles, setRoles] = useState<UserRole[]>([]);
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [managers, setManagers] = useState<Manager[]>([]);
+  // const [tasks, setTasks] = useState<Task[]>([]);
+  // const [users, setUsers] = useState<User[]>([]);
+  // const [projects, setProjects] = useState<Project[]>([]);
+  // const [statuses, setStatuses] = useState<Column[]>([]);
+  // const [products, setProducts] = useState<Product[]>([]);
+  // const [roles, setRoles] = useState<UserRole[]>([]);
+  // const [holidays, setHolidays] = useState<Holiday[]>([]);
+  // const [managers, setManagers] = useState<Manager[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -69,6 +70,22 @@ export default function Index() {
   const [isCreatingStatus, setIsCreatingStatus] = useState(false);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [isCreatingHoliday, setIsCreatingHoliday] = useState(false);
+
+  // Use the custom hook for data fetching
+  const {
+    tasks, setTasks,
+    users, setUsers,
+    projects, setProjects,
+    statuses, setStatuses,
+    products, setProducts,
+    roles, setRoles,
+    holidays, setHolidays,
+    managers, setManagers,
+    loading,
+    error,
+    refetch
+  } = useDataFetching()
+
   // const [taskSearch, setTaskSearch] = useState("");
   // const [userSearch, setUserSearch] = useState("");
   // const [projectSearch, setProjectSearch] = useState("");
@@ -97,116 +114,124 @@ export default function Index() {
     localStorage.setItem("activeTab", tab);
   };
 
+  // Set current user on component mount
   useEffect(() => {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      setCurrentUser(JSON.parse(userString));
+    }
+  }, []);
 
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const userString = localStorage.getItem('user');
+  // useEffect(() => {
 
-        if (!token || !userString) {
-          console.warn("User not logged in");
-          return;
-        }
+  //   const fetchData = async () => {
+  //     try {
+  //       const token = localStorage.getItem('token');
+  //       const userString = localStorage.getItem('user');
 
-        const user = JSON.parse(userString);
-        setCurrentUser(user);
+  //       if (!token || !userString) {
+  //         console.warn("User not logged in");
+  //         return;
+  //       }
 
-
-        // Fetch tasks by user ID
-        const taskResponse = await HttpClient.GET<Task[]>(`/api/Tasks/user/${user.id}`);
-        if (!taskResponse.isError && taskResponse.data) {
-          const convertedTasks = taskResponse.data.map(task => ({
-            ...task,
-            startDate: new Date(task.startDate),
-            endDate: new Date(task.endDate),
-            created_at: new Date(task.created_at),
-            updated_at: new Date(task.updated_at),
-            project_start: new Date(task.project_start),
-            project_end: new Date(task.project_end)
-          }));
-          setTasks(convertedTasks);
-        } else {
-          console.error("Failed to fetch tasks:", taskResponse.message);
-        }
+  //       const user = JSON.parse(userString);
+  //       setCurrentUser(user);
 
 
-        // Fetch all users
-        const userResponse = await HttpClient.GET<User[]>('/api/User');
-        if (!userResponse.isError && userResponse.data) {
-          setUsers(userResponse.data);
-        } else {
-          console.error("Failed to fetch users:", userResponse.message);
-        }
+  //       // Fetch tasks by user ID
+  //       const taskResponse = await HttpClient.GET<Task[]>(`/api/Tasks/user/${user.id}`);
+  //       if (!taskResponse.isError && taskResponse.data) {
+  //         const convertedTasks = taskResponse.data.map(task => ({
+  //           ...task,
+  //           startDate: new Date(task.startDate),
+  //           endDate: new Date(task.endDate),
+  //           created_at: new Date(task.created_at),
+  //           updated_at: new Date(task.updated_at),
+  //           project_start: new Date(task.project_start),
+  //           project_end: new Date(task.project_end)
+  //         }));
+  //         setTasks(convertedTasks);
+  //       } else {
+  //         console.error("Failed to fetch tasks:", taskResponse.message);
+  //       }
 
 
-        // Fetch all projects
-        const projectResponse = await HttpClient.GET<Project[]>('/api/Project');
-        if (!projectResponse.isError && projectResponse.data) {
-          const convertedProjects = projectResponse.data.map(project => ({
-            ...project,
-            startDate: new Date(project.startDate),
-            endDate: new Date(project.endDate),
-            createdAt: new Date(project.createdAt)
-          }));
-          setProjects(convertedProjects);
-        } else {
-          console.error("Failed to fetch projects:", projectResponse.message);
-        }
-
-        // Fetch all roles
-        const roleResponse = await HttpClient.GET<UserRole[]>('/api/Role');
-        if (!roleResponse.isError && roleResponse.data) {
-          setRoles(roleResponse.data);
-        } else {
-          console.error("Failed to fetch roles:", roleResponse.message);
-        }
-
-        // Fetch all holidays
-        const holidayResponse = await HttpClient.GET<Holiday[]>('/api/Holiday');
-        if (!holidayResponse.isError && holidayResponse.data) {
-          const convertedHolidays = holidayResponse.data.map(holiday => ({
-            ...holiday,
-            date: new Date(holiday.date),
-          }));
-          setHolidays(convertedHolidays);
-        } else {
-          console.error("Failed to fetch holidays:", holidayResponse.message);
-        }
+  //       // Fetch all users
+  //       const userResponse = await HttpClient.GET<User[]>('/api/User');
+  //       if (!userResponse.isError && userResponse.data) {
+  //         setUsers(userResponse.data);
+  //       } else {
+  //         console.error("Failed to fetch users:", userResponse.message);
+  //       }
 
 
-        // Fetch all products
-        const productResponse = await HttpClient.GET<Product[]>('/api/Product');
-        if (!productResponse.isError && productResponse.data) {
-          setProducts(productResponse.data);
-        } else {
-          console.error("Failed to fetch products:", productResponse.message);
-        }
+  //       // Fetch all projects
+  //       const projectResponse = await HttpClient.GET<Project[]>('/api/Project');
+  //       if (!projectResponse.isError && projectResponse.data) {
+  //         const convertedProjects = projectResponse.data.map(project => ({
+  //           ...project,
+  //           startDate: new Date(project.startDate),
+  //           endDate: new Date(project.endDate),
+  //           createdAt: new Date(project.createdAt)
+  //         }));
+  //         setProjects(convertedProjects);
+  //       } else {
+  //         console.error("Failed to fetch projects:", projectResponse.message);
+  //       }
+
+  //       // Fetch all roles
+  //       const roleResponse = await HttpClient.GET<UserRole[]>('/api/Role');
+  //       if (!roleResponse.isError && roleResponse.data) {
+  //         setRoles(roleResponse.data);
+  //       } else {
+  //         console.error("Failed to fetch roles:", roleResponse.message);
+  //       }
+
+  //       // Fetch all holidays
+  //       const holidayResponse = await HttpClient.GET<Holiday[]>('/api/Holiday');
+  //       if (!holidayResponse.isError && holidayResponse.data) {
+  //         const convertedHolidays = holidayResponse.data.map(holiday => ({
+  //           ...holiday,
+  //           date: new Date(holiday.date),
+  //         }));
+  //         setHolidays(convertedHolidays);
+  //       } else {
+  //         console.error("Failed to fetch holidays:", holidayResponse.message);
+  //       }
 
 
-        //fetch all statuses
-        const statusResponse = await HttpClient.GET<Column[]>("/api/TasksStatus");
-        if (!statusResponse.isError && statusResponse.data) {
-          setStatuses(statusResponse.data);
-        } else {
-          console.error("Failed to fetch task statuses:", statusResponse.message);
-        }
+  //       // Fetch all products
+  //       const productResponse = await HttpClient.GET<Product[]>('/api/Product');
+  //       if (!productResponse.isError && productResponse.data) {
+  //         setProducts(productResponse.data);
+  //       } else {
+  //         console.error("Failed to fetch products:", productResponse.message);
+  //       }
 
-        //fetch managers
-        const managerResponse = await HttpClient.GET<Manager[]>("/api/User/managers");
-        if (!managerResponse.isError && managerResponse.data) {
-          setManagers(managerResponse.data);
-        } else {
-          console.error("Failed to fetch managers:", managerResponse.message);
-        }
 
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      }
-    };
+  //       //fetch all statuses
+  //       const statusResponse = await HttpClient.GET<Column[]>("/api/TasksStatus");
+  //       if (!statusResponse.isError && statusResponse.data) {
+  //         setStatuses(statusResponse.data);
+  //       } else {
+  //         console.error("Failed to fetch task statuses:", statusResponse.message);
+  //       }
 
-    fetchData();
-  }, [refreshKey]);
+  //       //fetch managers
+  //       const managerResponse = await HttpClient.GET<Manager[]>("/api/User/managers");
+  //       if (!managerResponse.isError && managerResponse.data) {
+  //         setManagers(managerResponse.data);
+  //       } else {
+  //         console.error("Failed to fetch managers:", managerResponse.message);
+  //       }
+
+  //     } catch (err) {
+  //       console.error("Error fetching data:", err);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [refreshKey]);
 
 
   // const taskStats = useMemo(() => {
@@ -491,6 +516,7 @@ export default function Index() {
     }
 
     setRefreshKey(old => old + 1); // Trigger data refresh
+    refetch() // Refetch data to get updated users
 
     // Cleanup
     setIsUserModalOpen(false);
@@ -814,7 +840,8 @@ export default function Index() {
 
 
 
-        setRefreshKey(old => old + 1); // Trigger data refresh
+        // setRefreshKey(old => old + 1); // Trigger data refresh
+        refetch() // Refetch data to get updated statuses
 
         toast({
           title: "Status updated successfully",
