@@ -22,9 +22,9 @@ export function TaskSidebar({ currentUser, activeTab, onTabChange }: TaskSidebar
   const baseItems = [
     { title: "Kanban", value: "kanban", icon: FolderKanban },
     { title: "List", value: "list", icon: List },
-    { title: "Stats", value: "stats", icon: BarChart3 },
-    { title: "Reports", value: "reports", icon: FileBarChart },
-    { title: "Hourly Report", value: "hourlyreport", icon: FileBarChart }
+    // { title: "Stats", value: "stats", icon: BarChart3 },
+    { title: "Stats", value: "reports", icon: BarChart3 },
+    { title: "Report", value: "hourlyreport", icon: FileBarChart }
   ];
 
   const managerAdminItems = [

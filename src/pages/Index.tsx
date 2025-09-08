@@ -114,9 +114,9 @@ export default function Index() {
 
 
         // Fetch tasks by user ID
-        const response = await HttpClient.GET<Task[]>(`/api/Tasks/user/${user.id}`);
-        if (!response.isError && response.data) {
-          const convertedTasks = response.data.map(task => ({
+        const taskResponse = await HttpClient.GET<Task[]>(`/api/Tasks/user/${user.id}`);
+        if (!taskResponse.isError && taskResponse.data) {
+          const convertedTasks = taskResponse.data.map(task => ({
             ...task,
             startDate: new Date(task.startDate),
             endDate: new Date(task.endDate),
@@ -127,7 +127,7 @@ export default function Index() {
           }));
           setTasks(convertedTasks);
         } else {
-          console.error("Failed to fetch tasks:", response.message);
+          console.error("Failed to fetch tasks:", taskResponse.message);
         }
 
 
@@ -185,11 +185,11 @@ export default function Index() {
 
 
         //fetch all statuses
-        const statusresponse = await HttpClient.GET<Column[]>("/api/TasksStatus");
-        if (!statusresponse.isError && statusresponse.data) {
-          setStatuses(statusresponse.data);
+        const statusResponse = await HttpClient.GET<Column[]>("/api/TasksStatus");
+        if (!statusResponse.isError && statusResponse.data) {
+          setStatuses(statusResponse.data);
         } else {
-          console.error("Failed to fetch task statuses:", statusresponse.message);
+          console.error("Failed to fetch task statuses:", statusResponse.message);
         }
 
         //fetch managers
@@ -200,10 +200,6 @@ export default function Index() {
           console.error("Failed to fetch managers:", managerResponse.message);
         }
 
-        console.log(managers);
-
-
-
       } catch (err) {
         console.error("Error fetching data:", err);
       }
@@ -213,26 +209,26 @@ export default function Index() {
   }, [refreshKey]);
 
 
-  const taskStats = useMemo(() => {
-    const total = tasks.length;
-    const byStatus = tasks.reduce((acc, task) => {
-      acc[task.status] = (acc[task.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+  // const taskStats = useMemo(() => {
+  //   const total = tasks.length;
+  //   const byStatus = tasks.reduce((acc, task) => {
+  //     acc[task.status] = (acc[task.status] || 0) + 1;
+  //     return acc;
+  //   }, {} as Record<string, number>);
 
-    const byPriority = tasks.reduce((acc, task) => {
-      acc[task.priority] = (acc[task.priority] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+  //   const byPriority = tasks.reduce((acc, task) => {
+  //     acc[task.priority] = (acc[task.priority] || 0) + 1;
+  //     return acc;
+  //   }, {} as Record<string, number>);
 
-    return {
-      total,
-      byStatus,
-      byPriority,
-      assigned: tasks.filter(t => t.assignee).length,
-      unassigned: tasks.filter(t => !t.assignee).length
-    };
-  }, [tasks]);
+  //   return {
+  //     total,
+  //     byStatus,
+  //     byPriority,
+  //     assigned: tasks.filter(t => t.assignee).length,
+  //     unassigned: tasks.filter(t => !t.assignee).length
+  //   };
+  // }, [tasks]);
 
   const priorityMap: Record<TaskPriority, number> = {
     'low': 1,
@@ -1168,9 +1164,9 @@ export default function Index() {
                 </TabsContent>
 
 
-                <TabsContent value="stats" className="space-y-4">
+                {/* <TabsContent value="stats" className="space-y-4">
                   <TaskStats taskStats={taskStats} />
-                </TabsContent>
+                </TabsContent> */}
 
                 <TabsContent value="reports" className="space-y-4">
                   <Reports

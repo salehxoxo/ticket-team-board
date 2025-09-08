@@ -46,12 +46,12 @@ const priorityOptions: { value: TaskPriority; label: string }[] = [
   { value: 'urgent', label: 'Urgent' }
 ];
 
-export function TaskModal({ 
-  task, 
-  isOpen, 
-  onClose, 
-  onSave, 
-  currentUser, 
+export function TaskModal({
+  task,
+  isOpen,
+  onClose,
+  onSave,
+  currentUser,
   availableUsers,
   availableProjects,
   holidays,
@@ -74,11 +74,11 @@ export function TaskModal({
   const [errors, setErrors] = useState<Partial<TaskFormData>>({});
 
   useEffect(() => {
-  if (formData.startDate && formData.endDate && formData.endDate >= formData.startDate) {
-    const estimatedHours = calculateEstimatedHours(formData.startDate, formData.endDate, holidays);
-    setFormData(prev => ({ ...prev, estimatedHours }));
-  }
-}, [formData.startDate, formData.endDate, holidays]);
+    if (formData.startDate && formData.endDate && formData.endDate >= formData.startDate) {
+      const estimatedHours = calculateEstimatedHours(formData.startDate, formData.endDate, holidays);
+      setFormData(prev => ({ ...prev, estimatedHours }));
+    }
+  }, [formData.startDate, formData.endDate, holidays]);
 
   useEffect(() => {
     if (task) {
@@ -96,7 +96,7 @@ export function TaskModal({
     } else if (isCreating) {
       const defaultStartDate = new Date();
       const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      
+
       setFormData({
         name: '',
         description: '',
@@ -117,7 +117,7 @@ export function TaskModal({
 
   const validateForm = (): boolean => {
     const newErrors: Partial<TaskFormData> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Task name is required';
     }
@@ -138,26 +138,26 @@ export function TaskModal({
 
 
   const handleSave = () => {
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  // ✅ validate date range before closing
-  const selectedProject = availableProjects.find(p => p.id === formData.projectId);
-  if (
-    selectedProject &&
-    !isDateRangeWithin(
-      formData.startDate,
-      formData.endDate,
-      selectedProject.startDate,
-      selectedProject.endDate
-    )
-  ) {
-    // you already show a toast elsewhere, so just stop here
-    return; // don't close the dialog
-  }
+    // ✅ validate date range before closing
+    const selectedProject = availableProjects.find(p => p.id === formData.projectId);
+    if (
+      selectedProject &&
+      !isDateRangeWithin(
+        formData.startDate,
+        formData.endDate,
+        selectedProject.startDate,
+        selectedProject.endDate
+      )
+    ) {
+      // you already show a toast elsewhere, so just stop here
+      return; // don't close the dialog
+    }
 
-  onSave(formData);
-  onClose(); // only close if everything is valid
-};
+    onSave(formData);
+    onClose(); // only close if everything is valid
+  };
 
 
   const canEdit = (field: keyof TaskFormData): boolean => {
@@ -262,12 +262,7 @@ export function TaskModal({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* {statusOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))} */}
-                  {columns.length === 0 ? (
+                  {/* {columns.length === 0 ? (
                   <SelectItem value="loading" disabled>
                     Loading statuses...
                   </SelectItem>
@@ -277,7 +272,15 @@ export function TaskModal({
                       {option.name}
                     </SelectItem>
                   ))
-                )}
+                )} */}
+
+                  {
+                    columns.map(option => (
+                      <SelectItem key={option.name} value={option.name}>
+                        {option.name}
+                      </SelectItem>
+                    ))
+                  }
 
                 </SelectContent>
               </Select>
@@ -362,7 +365,7 @@ export function TaskModal({
                 </Avatar>
                 <span className="font-medium">{task.assignor}</span>
                 <Badge variant="outline" className="text-xs">
-                  {task.assignorRole} 
+                  {task.assignorRole}
                 </Badge>
               </div>
             </div>
@@ -466,18 +469,18 @@ export function TaskModal({
             </div> */}
 
             <div className="space-y-2">
-            <Label htmlFor="estimatedHours" className="text-sm font-medium">Estimated Hours</Label>
-            <Input
-              id="estimatedHours"
-              type="number"
-              value={formData.estimatedHours}
-              readOnly
-              className="bg-muted"
-              placeholder="Calculated automatically"
-            />
-            <span className="text-sm text-muted-foreground">
-              Based on {calculateBusinessDays(formData.startDate, formData.endDate, holidays)} working days
-            </span>
+              <Label htmlFor="estimatedHours" className="text-sm font-medium">Estimated Hours</Label>
+              <Input
+                id="estimatedHours"
+                type="number"
+                value={formData.estimatedHours}
+                readOnly
+                className="bg-muted"
+                placeholder="Calculated automatically"
+              />
+              <span className="text-sm text-muted-foreground">
+                Based on {calculateBusinessDays(formData.startDate, formData.endDate, holidays)} working days
+              </span>
             </div>
           </div>
 
