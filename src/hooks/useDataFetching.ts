@@ -89,7 +89,8 @@ export const useDataFetching = () => {
             if (!holidayResponse.isError && holidayResponse.data) {
                 const convertedHolidays = holidayResponse.data.map(holiday => ({
                     ...holiday,
-                    date: new Date(holiday.date),
+                    startDate: new Date(holiday.startDate),
+                    endDate: new Date(holiday.endDate)
                 }));
                 setHolidays(convertedHolidays);
             } else {

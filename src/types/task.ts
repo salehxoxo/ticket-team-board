@@ -116,12 +116,14 @@ export interface TaskFormData {
 export interface Holiday {
   id: string;
   name: string;
-  date: Date;
+  startDate: Date;
+  endDate: Date;
 }
 
 export interface HolidayFormData {
   name: string;
-  date: Date;
+  startDate: Date;
+  endDate: Date;
 }
 
 

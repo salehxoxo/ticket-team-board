@@ -12,15 +12,22 @@ export function calculateBusinessDays(
   endDate: Date,
   holidays: Holiday[] = []
 ): number {
-  // if (startDate >= endDate) {
-  //   return 0;
-  // }
   if (startDate > endDate) {
-  return 0;
+    return 0;
   }
 
+  // Build holiday set (supporting ranges)
   const holidayDates = new Set(
-    holidays.map(h => h.date.toDateString())
+    holidays.flatMap(h => {
+      const dates: string[] = [];
+      const current = new Date(h.startDate);
+      const end = new Date(h.endDate);
+      while (current <= end) {
+        dates.push(current.toDateString());
+        current.setDate(current.getDate() + 1);
+      }
+      return dates;
+    })
   );
 
   let businessDays = 0;

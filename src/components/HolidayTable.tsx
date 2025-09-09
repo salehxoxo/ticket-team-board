@@ -26,7 +26,8 @@ export function HolidayTable({ holidays, onCreateHoliday, onEditHoliday, onDelet
     const filteredAndSortedHolidays = useMemo(() => {
         let filtered = holidays.filter((h) =>
             h.name.toLowerCase().includes(search.toLowerCase()) ||
-            h.date.toLocaleDateString().toLowerCase().includes(search.toLowerCase())
+            h.startDate.toLocaleDateString().toLowerCase().includes(search.toLowerCase()) ||
+            h.endDate.toLocaleDateString().toLowerCase().includes(search.toLowerCase())
         );
 
         filtered.sort((a, b) => {
@@ -37,8 +38,8 @@ export function HolidayTable({ holidays, onCreateHoliday, onEditHoliday, onDelet
                     bValue = b.name.toLowerCase();
                     break;
                 case "date":
-                    aValue = a.date.getTime();
-                    bValue = b.date.getTime();
+                    aValue = a.startDate.getTime();
+                    bValue = b.startDate.getTime();
                     break;
             }
             if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
@@ -123,7 +124,13 @@ export function HolidayTable({ holidays, onCreateHoliday, onEditHoliday, onDelet
                             paginatedHolidays.map((holiday) => (
                                 <TableRow key={holiday.id} className="hover:bg-muted/50">
                                     <TableCell>{holiday.name}</TableCell>
-                                    <TableCell>{holiday.date.toLocaleDateString()}</TableCell>
+                                    {/* <TableCell>{holiday.date.toLocaleDateString()}</TableCell> */}
+                                    <TableCell>
+                                        {holiday.startDate.toDateString() === holiday.endDate.toDateString()
+                                            ? holiday.startDate.toLocaleDateString()
+                                            : `${holiday.startDate.toLocaleDateString()} - ${holiday.endDate.toLocaleDateString()}`}
+                                    </TableCell>
+
                                     <TableCell className="text-right flex justify-end gap-2">
                                         <Button
                                             variant="ghost"

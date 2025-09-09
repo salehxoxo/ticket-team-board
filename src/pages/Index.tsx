@@ -35,6 +35,7 @@ import { ProductTable } from "@/components/ProductTable";
 import { HolidayTable } from "@/components/HolidayTable";
 import HourlyReport from "@/components/HourlyReport";
 import { useDataFetching } from "@/hooks/useDataFetching";
+import { start } from "repl";
 
 
 
@@ -542,15 +543,15 @@ export default function Index() {
 
     console.log("handleDeleteProject");
     // Check if project has tasks
-    const projectTasks = tasks.filter(task => task.projectId === project.id);
-    if (projectTasks.length > 0) {
-      toast({
-        title: "Cannot delete project",
-        description: `This project has ${projectTasks.length} task(s). Please reassign or delete them first.`,
-        variant: "destructive",
-      });
-      return;
-    }
+    // const projectTasks = tasks.filter(task => task.projectId === project.id);
+    // if (projectTasks.length > 0) {
+    //   toast({
+    //     title: "Cannot delete project",
+    //     description: `This project has ${projectTasks.length} task(s). Please reassign or delete them first.`,
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
 
 
     const response = await HttpClient.DELETE<Project>(`/api/Project/${project.id}`);
@@ -562,6 +563,12 @@ export default function Index() {
       toast({
         title: "Project deleted successfully",
         description: `"${deletedProject.name || project.name}" has been deleted.`,
+      });
+    } else {
+      toast({
+        title: "Error deleting project",
+        description: response.message,
+        variant: "destructive",
       });
     }
 
@@ -1024,7 +1031,9 @@ export default function Index() {
 
     const holidayPayload = {
       name: holidayData.name,
-      date: holidayData.date
+      // date: holidayData.date,
+      startDate: holidayData.startDate,
+      endDate: holidayData.endDate
     };
 
     if (isCreatingHoliday) {
@@ -1036,7 +1045,9 @@ export default function Index() {
       if (!response.isError && response.data) {
         const createdHoliday = {
           ...response.data,
-          date: new Date(response.data.date),
+          // date: new Date(response.data.date),
+          startDate: new Date(response.data.startDate),
+          endDate: new Date(response.data.endDate),
         };
         setHolidays(prev => [...prev, createdHoliday]);
 
@@ -1057,7 +1068,9 @@ export default function Index() {
       if (!response.isError && response.data) {
         const updatedHoliday = {
           ...response.data,
-          date: new Date(response.data.date),
+          // date: new Date(response.data.date),
+          startDate: new Date(response.data.startDate),
+          endDate: new Date(response.data.endDate),
         };
         setHolidays(prev =>
           prev.map(holiday => holiday.id === updatedHoliday.id ? updatedHoliday : holiday)
