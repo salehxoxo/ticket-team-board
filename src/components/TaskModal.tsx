@@ -30,7 +30,17 @@ interface TaskModalProps {
   isCreating?: boolean;
   isSaving?: boolean;
   columns: Column[]; // pass columns as a prop
+  roles: UserRole[];
 }
+
+type TaskFormErrors = {
+  name?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  // add other fields if needed
+};
+
 
 const statusOptions: { value: string; label: string }[] = [
   { value: 'todo', label: 'To Do' },
@@ -57,7 +67,8 @@ export function TaskModal({
   holidays,
   isCreating = false,
   isSaving = false,
-  columns
+  columns,
+  roles
 }: TaskModalProps) {
   const [formData, setFormData] = useState<TaskFormData>({
     name: '',
@@ -71,7 +82,9 @@ export function TaskModal({
     estimatedHours: 0
   });
 
-  const [errors, setErrors] = useState<Partial<TaskFormData>>({});
+  // const [errors, setErrors] = useState<Partial<TaskFormData>>({});
+  const [errors, setErrors] = useState<TaskFormErrors>({});
+
 
   useEffect(() => {
     if (formData.startDate && formData.endDate && formData.endDate >= formData.startDate) {
@@ -112,23 +125,49 @@ export function TaskModal({
     setErrors({});
   }, [task, isCreating, isOpen]);
 
-  const canEditAllFields = ['manager', 'admin'].includes(currentUser.role);
-  const canEditLimitedFields = currentUser.role === 'developer';
+  const userRole = roles.find(r => r.name === currentUser.role);
 
+  // const canEditAllFields = ['manager', 'admin'].includes(currentUser.role);
+  // const canEditLimitedFields = currentUser.role === 'developer';
+  const canEditAllFields = !!userRole?.isManager;
+  const canEditLimitedFields = !userRole?.isManager;
+
+  // Validation
   const validateForm = (): boolean => {
-    const newErrors: Partial<TaskFormData> = {};
+    // const newErrors: Partial<TaskFormData> = {};
+    const newErrors: TaskFormErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Task name is required';
-    }
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
+    if (!formData.name?.trim()) {
+      newErrors.name = "Task name is required";
     }
 
+    if (!formData.description?.trim()) {
+      newErrors.description = "Description is required";
+    }
+
+    if (!formData.startDate) {
+      newErrors.startDate = "Start date is required";
+    }
+
+    if (!formData.endDate) {
+      newErrors.endDate = "End date is required";
+    }
+
+    if (formData.startDate && formData.endDate) {
+      if (formData.startDate > formData.endDate) {
+        newErrors.endDate = "End date must be after start date";
+      }
+
+      const project = availableProjects.find(p => p.id === formData.projectId);
+      if (project && !isDateRangeWithin(formData.startDate, formData.endDate, project.startDate, project.endDate)) {
+        newErrors.endDate = "Dates must be within project range";
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
 
   // const handleSave = () => {
   //   if (!validateForm()) return;
@@ -371,88 +410,28 @@ export function TaskModal({
             </div>
           )}
 
-          {/* Date Range and Hours */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "justify-start text-left font-normal",
-                      !formData.startDate && "text-muted-foreground"
-                    )}
-                    disabled={!canEdit('startDate')}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.startDate ? format(formData.startDate, "PPP") : <span>Pick start date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.startDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        // Validate against project dates
-                        const selectedProject = availableProjects.find(p => p.id === formData.projectId);
-                        if (selectedProject) {
-                          if (!isDateRangeWithin(date, formData.endDate, selectedProject.startDate, selectedProject.endDate)) {
-                            // Show warning but allow the change
-                            console.warn('Task dates should be within project range');
-                          }
-                        }
-                        setFormData(prev => ({ ...prev, startDate: date }));
-                      }
-                    }}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label>Start Date</Label>
+              <Input
+                type="date"
+                value={formData.startDate ? format(formData.startDate, "yyyy-MM-dd") : ""}
+                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value ? new Date(e.target.value) : undefined }))}
+              />
+              {errors.startDate && <p className="text-sm text-red-500">{errors.startDate}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium">End Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "justify-start text-left font-normal",
-                      !formData.endDate && "text-muted-foreground"
-                    )}
-                    disabled={!canEdit('endDate')}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.endDate ? format(formData.endDate, "PPP") : <span>Pick end date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.endDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        // Validate against project dates
-                        const selectedProject = availableProjects.find(p => p.id === formData.projectId);
-                        if (selectedProject) {
-                          if (!isDateRangeWithin(formData.startDate, date, selectedProject.startDate, selectedProject.endDate)) {
-                            // Show warning but allow the change
-                            console.warn('Task dates should be within project range');
-                          }
-                        }
-                        setFormData(prev => ({ ...prev, endDate: date }));
-                      }
-                    }}
-                    disabled={(date) => date < formData.startDate}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label>End Date</Label>
+              <Input
+                type="date"
+                value={formData.endDate ? format(formData.endDate, "yyyy-MM-dd") : ""}
+                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value ? new Date(e.target.value) : undefined }))}
+                min={formData.startDate ? format(formData.startDate, "yyyy-MM-dd") : undefined}
+              />
+              {errors.endDate && <p className="text-sm text-red-500">{errors.endDate}</p>}
             </div>
+
 
             {/* <div className="space-y-2">
               <Label htmlFor="hours" className="text-sm font-medium">Hours</Label>

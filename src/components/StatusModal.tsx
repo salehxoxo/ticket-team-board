@@ -84,7 +84,7 @@ export function StatusModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>
             {isCreating ? "Create New Status" : "Edit Status"}
@@ -96,7 +96,7 @@ export function StatusModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-6 py-4">
+        <div className="grid gap-3 py-3">
           {/* Name */}
           <div className="grid gap-2">
             <Label htmlFor="name">Status Name</Label>

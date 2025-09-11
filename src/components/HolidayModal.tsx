@@ -99,6 +99,7 @@ export function HolidayModal({ holiday, isOpen, onClose, onSave, isCreating, isS
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Enter holiday name"
+              required
             />
             {errors.name && <span className="text-sm text-destructive">{errors.name}</span>}
           </div>

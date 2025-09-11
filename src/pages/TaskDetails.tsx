@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Clock, MessageSquare, Plus, User, Calendar, AlertTriangle } from "lucide-react";
-import { Column, Task, TimeLog, Comment, User as UserType } from "@/types/task";
+import { Column, Task, TimeLog, Comment, User as UserType, Holiday } from "@/types/task";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "react-router-dom";
 import { HttpClient } from "@/api/communicator";
@@ -20,7 +20,7 @@ export default function TaskDetails() {
 
 
   const location = useLocation();
-  const { task, column } = location.state as { task: Task; column: Column };
+  const { task, column, holidays = [] } = location.state as { task: Task; column: Column; holidays?: Holiday[] };
 
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -135,12 +135,53 @@ export default function TaskDetails() {
 
     if (!newTimeLog.description.trim() || !newTimeLog.hours) return;
 
-    // Validate workDate
-    if (newTimeLog.workDate < task.startDate || newTimeLog.workDate > task.endDate) {
+    const workDate = new Date(newTimeLog.workDate);
+    const startDate = new Date(task.startDate);
+    const endDate = new Date(task.endDate);
+
+    // Validate range
+    if (workDate < startDate || workDate > endDate) {
       toast({
         variant: "destructive",
         title: "Invalid work date",
         description: "Work date must be within the task's start and end dates.",
+      });
+      return;
+    }
+
+    // Check weekend
+    const day = workDate.getDay(); // 0 = Sunday, 6 = Saturday
+    if (day === 0 || day === 6) {
+      toast({
+        variant: "destructive",
+        title: "Invalid work date",
+        description: "Work date cannot be on a Saturday or Sunday.",
+      });
+      return;
+    }
+
+    // Check gazetted holidays
+    const isHoliday = holidays.some(h => {
+      const holidayStart = new Date(h.startDate);
+      const holidayEnd = new Date(h.endDate);
+      return workDate >= holidayStart && workDate <= holidayEnd;
+    });
+
+    if (isHoliday) {
+      toast({
+        variant: "destructive",
+        title: "Invalid work date",
+        description: "Work date falls on a gazetted holiday.",
+      });
+      return;
+    }
+
+    // Check daily hours
+    if (Number(newTimeLog.hours) > 8) {
+      toast({
+        variant: "destructive",
+        title: "Invalid hours",
+        description: "You cannot log more than 8 hours for a single day.",
       });
       return;
     }
@@ -401,7 +442,7 @@ export default function TaskDetails() {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{log.description}</p>
-                    <p className="text-xs text-muted-foreground">{log.loggedAt.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">{log.workDate.toLocaleDateString()}</p>
                   </div>
                 ))}
 

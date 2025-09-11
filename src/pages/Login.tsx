@@ -129,6 +129,7 @@ const Login = () => {
               <CardDescription>
                 Sign in to your account to continue managing your projects
               </CardDescription>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">

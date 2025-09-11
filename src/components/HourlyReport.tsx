@@ -7,6 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronRight, Search, Filter } from 'lucide-react';
 import { Task, User, Project, Product, TimeLog } from '@/types/task';
 import { HttpClient } from '@/api/communicator';
+// import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx-js-style";
+
 
 interface ReportsProps {
     tasks: Task[];
@@ -38,10 +42,20 @@ export default function HourlyReport({ tasks, users, projects, products }: Repor
 
 
     useEffect(() => {
+
         const fetchLogs = async () => {
             // if (!taskId) return;
+            if (!tasks || tasks.length === 0) return;
 
-            const response = await HttpClient.GET<TimeLog[]>(`/api/TaskLog/GetAll`);
+            // Collect taskIds
+            const taskIds = tasks.map(t => t.id);
+
+            const response = await HttpClient.POST<TimeLog[]>(
+                `/api/TaskLog/GetByTaskIds`,
+                taskIds // send as body
+            );
+
+            // const response = await HttpClient.GET<TimeLog[]>(`/api/TaskLog/GetAll`);
 
             if (!response.isError && response.data) {
                 const convertedLogs = response.data.map(log => ({
@@ -105,7 +119,7 @@ export default function HourlyReport({ tasks, users, projects, products }: Repor
 
                     const actualHours = taskLogs.reduce((sum, log) => sum + log.hours, 0);
 
-                    if (actualHours === 0) return;
+                    // if (actualHours === 0) return;
 
 
                     const taskNode: HierarchyNode = {
@@ -240,10 +254,81 @@ export default function HourlyReport({ tasks, users, projects, products }: Repor
         );
     };
 
+    const exportToExcel = () => {
+        const rows: any[][] = [];
+
+        // Header row
+        rows.push([
+            {
+                v: "Product / Project / Task",
+                s: { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "4B5563" } }, alignment: { horizontal: "left" } }
+            },
+            {
+                v: "Resource",
+                s: { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "4B5563" } }, alignment: { horizontal: "center" } }
+            },
+            {
+                v: "Hours",
+                s: { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "4B5563" } }, alignment: { horizontal: "right" } }
+            }
+        ]);
+
+        filteredData.forEach(product => {
+            // Product row
+            rows.push([
+                { v: `Product: ${product.name}`, s: { font: { bold: true }, fill: { fgColor: { rgb: "E5E7EB" } } } },
+                { v: "", s: { fill: { fgColor: { rgb: "E5E7EB" } } } },
+                { v: `${product.totalHours}h total`, s: { font: { bold: true }, alignment: { horizontal: "right" }, fill: { fgColor: { rgb: "E5E7EB" } } } }
+            ]);
+
+            product.children?.forEach(project => {
+                // Project row
+                rows.push([
+                    { v: `   Project: ${project.name}`, s: { font: { bold: true }, fill: { fgColor: { rgb: "DBEAFE" } } } },
+                    { v: "", s: { fill: { fgColor: { rgb: "DBEAFE" } } } },
+                    { v: `${project.totalHours}h total`, s: { font: { bold: true }, alignment: { horizontal: "right" }, fill: { fgColor: { rgb: "DBEAFE" } } } }
+                ]);
+
+                project.children?.forEach(task => {
+                    // Task row
+                    rows.push([
+                        { v: `      Task: ${task.name}`, s: { alignment: { horizontal: "left" } } },
+                        { v: task.user?.full_name || task.user?.name || "", s: { alignment: { horizontal: "center" } } },
+                        { v: `${task.hours}h`, s: { alignment: { horizontal: "right" } } }
+                    ]);
+                });
+            });
+        });
+
+        // Convert rows → worksheet
+        const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+        // Column widths
+        worksheet["!cols"] = [
+            { wch: 45 }, // Product/Project/Task
+            { wch: 25 }, // Resource
+            { wch: 15 }  // Hours
+        ];
+
+        // Workbook
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+        // Export
+        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+        const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+        saveAs(blob, `Resource_Report_${new Date().toISOString().split("T")[0]}.xlsx`);
+    };
+
+
+
+
+
     return (
         <div className="space-y-6 p-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Resource Reports</h1>
+                <Button onClick={exportToExcel}>Export to Excel</Button>
             </div>
 
             {/* Filters */}

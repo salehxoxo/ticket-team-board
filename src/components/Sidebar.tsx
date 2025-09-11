@@ -11,14 +11,16 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { UserRole } from "@/types/task";
 
 interface TaskSidebarProps {
   currentUser: { role: string };
   activeTab: string;
   onTabChange: (tab: string) => void;
+  roles: UserRole[];
 }
 
-export function TaskSidebar({ currentUser, activeTab, onTabChange }: TaskSidebarProps) {
+export function TaskSidebar({ currentUser, activeTab, onTabChange, roles }: TaskSidebarProps) {
   const baseItems = [
     { title: "Kanban", value: "kanban", icon: FolderKanban },
     { title: "List", value: "list", icon: List },
@@ -33,17 +35,21 @@ export function TaskSidebar({ currentUser, activeTab, onTabChange }: TaskSidebar
     { title: "Products", value: "products", icon: Package },
     { title: "Statuses", value: "status", icon: Activity },
     { title: "Roles", value: "roles", icon: Layers },
+    { title: "Full Report", value: "fullreport", icon: Layers },
   ];
 
   const finalItems = [
     { title: "Holidays", value: "holidays", icon: Calendar },
   ];
 
+  const userRole = roles.find(r => r.name === currentUser.role);
+
   const items = [
     ...baseItems,
-    ...(["manager", "admin"].includes(currentUser.role) ? managerAdminItems : []),
+    ...(userRole?.isManager ? managerAdminItems : []),
     ...finalItems,
   ];
+
 
   const getNavCls = (isActive: boolean) =>
     isActive

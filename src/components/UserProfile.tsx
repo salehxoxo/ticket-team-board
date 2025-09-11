@@ -29,7 +29,7 @@ interface ProfileModalProps {
 
 export function ProfileModal({ user, isOpen, onClose }: ProfileModalProps) {
 
-      const { toast } = useToast();
+  const { toast } = useToast();
   const [passwordData, setPasswordData] = useState<PasswordFormData>({
     currentPassword: "",
     newPassword: "",
@@ -42,73 +42,73 @@ export function ProfileModal({ user, isOpen, onClose }: ProfileModalProps) {
   if (!user) return null;
 
   const handleChangePassword = async () => {
-  const newErrors: { [key: string]: string } = {};
+    const newErrors: { [key: string]: string } = {};
 
-  if (!passwordData.currentPassword) {
-    newErrors.currentPassword = "Current password is required";
-  }
-  if (!passwordData.newPassword) {
-    newErrors.newPassword = "New password is required";
-  } else if (passwordData.newPassword.length < 6) {
-    newErrors.newPassword = "Password must be at least 6 characters";
-  }
-  if (passwordData.newPassword !== passwordData.confirmPassword) {
-    newErrors.confirmPassword = "Passwords do not match";
-  }
-
-  setErrors(newErrors);
-  if (Object.keys(newErrors).length > 0) return;
-
-  setIsSaving(true);
-  try {
-    const ChangePasswordDto = {
-      id: user.id,
-      currentPassword: passwordData.currentPassword,
-      newPassword: passwordData.newPassword,
-    };
-
-    const response = await HttpClient.POST<Boolean>(`/api/User/change-password`, ChangePasswordDto);
-
-    if (!response.isError && response.data) {
-      toast({
-        title: "Password changed successfully",
-        description: "Your password has been updated. Please log in again.",
-      });
-
-      // Reset form state
-      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      setErrors({});
-
-
-      // Show confirmation prompt before logging out
-      const confirmed = window.confirm(
-        "Your password has been updated. You will now be logged out for security reasons. Click OK to continue."
-      );
-
-      if (confirmed) {
-        localStorage.removeItem('token');
-    localStorage.removeItem("user");
-    window.location.href = '/login';
-      }
-
-      return;
+    if (!passwordData.currentPassword) {
+      newErrors.currentPassword = "Current password is required";
+    }
+    if (!passwordData.newPassword) {
+      newErrors.newPassword = "New password is required";
+    } else if (passwordData.newPassword.length < 6) {
+      newErrors.newPassword = "Password must be at least 6 characters";
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
-    // toast.error("Failed to change password. Please try again.");
-    toast({
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    setIsSaving(true);
+    try {
+      const ChangePasswordDto = {
+        id: user.id,
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      };
+
+      const response = await HttpClient.POST<Boolean>(`/api/User/change-password`, ChangePasswordDto);
+
+      if (!response.isError && response.data) {
+        toast({
+          title: "Password changed successfully",
+          description: "Your password has been updated. Please log in again.",
+        });
+
+        // Reset form state
+        setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        setErrors({});
+
+
+        // Show confirmation prompt before logging out
+        const confirmed = window.confirm(
+          "Your password has been updated. You will now be logged out for security reasons. Click OK to continue."
+        );
+
+        if (confirmed) {
+          localStorage.removeItem('token');
+          localStorage.removeItem("user");
+          window.location.href = '/login';
+        }
+
+        return;
+      }
+
+      // toast.error("Failed to change password. Please try again.");
+      toast({
         title: "Error",
-        description: "Failed to change password. Please try again.",
+        description: response.message,
       });
-  } catch (error) {
-    // toast.error("An unexpected error occurred.");
-    toast({
+    } catch (error) {
+      // toast.error("An unexpected error occurred.");
+      toast({
         title: "Error",
         description: "An unexpected error occurred.",
       });
-  } finally {
-    setIsSaving(false);
-  }
-};
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
 
   return (

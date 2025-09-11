@@ -245,7 +245,7 @@ export function UserModal({
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-60 overflow-y-auto">
                 {roles.map(role => (
                   <SelectItem key={role.id} value={role.name}>
                     <div className="flex items-center gap-2">
@@ -276,7 +276,7 @@ export function UserModal({
               <SelectTrigger className={cn(errors.managerId && "border-destructive")}>
                 <SelectValue placeholder="Select a manager..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-60 overflow-y-auto">
                 {/* Explicit "None" option */}
                 <SelectItem value="0">None</SelectItem>
 

@@ -36,6 +36,7 @@ import { HolidayTable } from "@/components/HolidayTable";
 import HourlyReport from "@/components/HourlyReport";
 import { useDataFetching } from "@/hooks/useDataFetching";
 import { start } from "repl";
+import FullReport from "@/components/FullReport";
 
 
 
@@ -122,6 +123,8 @@ export default function Index() {
       setCurrentUser(JSON.parse(userString));
     }
   }, []);
+
+  const userRole = roles.find(r => r.name === currentUser.role);
 
   // useEffect(() => {
 
@@ -266,7 +269,7 @@ export default function Index() {
   //FOR TASK
 
   const handleCreateTask = () => {
-    if (!['manager', 'admin'].includes(currentUser.role)) {
+    if (userRole?.isManager === false) {
       toast({
         title: "Access Denied",
         description: "Only managers and admins can create new tasks.",
@@ -327,7 +330,7 @@ export default function Index() {
 
   const handleViewTask = (task: Task) => {
     const column = statuses.find(c => c.name === task.status);
-    navigate(`/task/${task.id}`, { state: { task, column } }); // Your intended behavior
+    navigate(`/task/${task.id}`, { state: { task, column, holidays } }); // Your intended behavior
   };
 
 
@@ -1137,13 +1140,13 @@ export default function Index() {
                 onClose={() => setOpen(false)}
               />
 
-
-              {['manager', 'admin'].includes(currentUser.role) && (
+              {userRole?.isManager && (
                 <Button onClick={handleCreateTask} className="gap-2">
                   <Plus className="h-4 w-4" />
                   New Task
                 </Button>
               )}
+
 
               <Button
                 variant="outline"
@@ -1172,6 +1175,7 @@ export default function Index() {
               currentUser={currentUser}
               activeTab={activeTab}
               onTabChange={handleTabChange}
+              roles={roles}
             />
             <div className="flex-1">
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -1217,6 +1221,15 @@ export default function Index() {
 
                 <TabsContent value="hourlyreport" className="space-y-4">
                   <HourlyReport
+                    tasks={tasks}
+                    users={users}
+                    projects={projects}
+                    products={products}
+                  />
+                </TabsContent>
+
+                <TabsContent value="fullreport" className="space-y-4">
+                  <FullReport
                     tasks={tasks}
                     users={users}
                     projects={projects}
@@ -1339,12 +1352,13 @@ export default function Index() {
           }}
           onSave={handleSaveTask}
           currentUser={currentUser}
-          availableUsers={users.filter(u => u.managerId === currentUser.id)}
+          availableUsers={users.filter(u => u.managerId === currentUser.id || u.id === currentUser.id)}
           availableProjects={projects}
           holidays={holidays}
           isCreating={isCreatingTask}
           isSaving={savingTask}
           columns={statuses}
+          roles={roles}
         />
       )}
 
