@@ -3,19 +3,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, ArrowUpDown, Edit, Trash2, Plus } from "lucide-react";
-import { Holiday } from "@/types/task";
+import { Holiday, User } from "@/types/task";
 
 interface HolidayTableProps {
     holidays: Holiday[];
     onCreateHoliday: () => void;
     onEditHoliday: (holiday: Holiday) => void;
     onDeleteHoliday: (holiday: Holiday) => void;
+    currentUser?: User;
 }
 
 type SortField = "name" | "date";
 type SortDirection = "asc" | "desc";
 
-export function HolidayTable({ holidays, onCreateHoliday, onEditHoliday, onDeleteHoliday }: HolidayTableProps) {
+export function HolidayTable({ holidays, onCreateHoliday, onEditHoliday, onDeleteHoliday, currentUser }: HolidayTableProps) {
     const [search, setSearch] = useState("");
     const [sortField, setSortField] = useState<SortField>("date");
     const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -86,10 +87,17 @@ export function HolidayTable({ holidays, onCreateHoliday, onEditHoliday, onDelet
             {/* Header */}
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Gazetted Holidays</h2>
-                <Button onClick={onCreateHoliday} className="gap-2">
+                {/* <Button onClick={onCreateHoliday} className="gap-2">
                     <Plus className="h-4 w-4" />
                     Add Holiday
-                </Button>
+                </Button> */}
+                {currentUser.isManager && (
+                    <Button onClick={onCreateHoliday} className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Holiday
+                    </Button>
+                )}
+
             </div>
 
             {/* Search */}

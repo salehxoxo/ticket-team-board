@@ -340,10 +340,14 @@ export default function Index() {
     priorityFilter?: TaskPriority | "all"
   ) => {
     // stash filters before navigating
-    sessionStorage.setItem("taskSearch", search);
-    sessionStorage.setItem("taskStatusFilter", statusFilter);
-    sessionStorage.setItem("taskPriorityFilter", priorityFilter);
+    // if(search || statusFilter || !priorityFilter) {
+    if (search !== undefined) {
+      sessionStorage.setItem("taskSearch", search);
+      sessionStorage.setItem("taskStatusFilter", statusFilter);
+      sessionStorage.setItem("taskPriorityFilter", priorityFilter);
+    }
 
+    // }
     const column = statuses.find(c => c.name === task.status);
     navigate(`/task/${task.id}`, { state: { task, column, holidays } });
   };
@@ -1344,6 +1348,7 @@ export default function Index() {
                     onCreateHoliday={handleCreateHoliday}
                     onEditHoliday={handleEditHoliday}
                     onDeleteHoliday={confirmDeleteHoliday}
+                    currentUser={currentUser}
                   />
 
                 </TabsContent>

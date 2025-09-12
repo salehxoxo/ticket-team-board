@@ -54,7 +54,7 @@ export function TaskSidebar({ currentUser, activeTab, onTabChange, roles }: Task
 
   const getNavCls = (isActive: boolean) =>
     isActive
-      ? "bg-sidebar-accent text-sidebar-primary font-medium"
+      ? "bg-gray-300 text-sidebar-primary font-medium"
       : "hover:bg-sidebar-accent/50";
 
   return (
