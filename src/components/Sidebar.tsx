@@ -12,9 +12,10 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { UserRole } from "@/types/task";
+import { User } from "@/types/task";
 
 interface TaskSidebarProps {
-  currentUser: { role: string };
+  currentUser: User;
   activeTab: string;
   onTabChange: (tab: string) => void;
   roles: UserRole[];
@@ -42,11 +43,11 @@ export function TaskSidebar({ currentUser, activeTab, onTabChange, roles }: Task
     { title: "Holidays", value: "holidays", icon: Calendar },
   ];
 
-  const userRole = roles.find(r => r.name === currentUser.role);
+  // const userRole = roles.find(r => r.name === currentUser.role);
 
   const items = [
     ...baseItems,
-    ...(userRole?.isManager ? managerAdminItems : []),
+    ...(currentUser.isManager ? managerAdminItems : []),
     ...finalItems,
   ];
 

@@ -129,8 +129,8 @@ export function TaskModal({
 
   // const canEditAllFields = ['manager', 'admin'].includes(currentUser.role);
   // const canEditLimitedFields = currentUser.role === 'developer';
-  const canEditAllFields = !!userRole?.isManager;
-  const canEditLimitedFields = !userRole?.isManager;
+  const canEditAllFields = !!currentUser?.isManager;
+  const canEditLimitedFields = !currentUser?.isManager;
 
   // Validation
   const validateForm = (): boolean => {
@@ -201,7 +201,7 @@ export function TaskModal({
 
   const canEdit = (field: keyof TaskFormData): boolean => {
     if (canEditAllFields) return true;
-    if (canEditLimitedFields && (field === 'status' || field === 'assigneeId')) return true;
+    if (canEditLimitedFields && (field === 'status')) return true;
     return false;
   };
 
@@ -417,6 +417,7 @@ export function TaskModal({
                 type="date"
                 value={formData.startDate ? format(formData.startDate, "yyyy-MM-dd") : ""}
                 onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value ? new Date(e.target.value) : undefined }))}
+                disabled={!canEdit("startDate")}  // disable based on role
               />
               {errors.startDate && <p className="text-sm text-red-500">{errors.startDate}</p>}
             </div>
@@ -428,6 +429,7 @@ export function TaskModal({
                 value={formData.endDate ? format(formData.endDate, "yyyy-MM-dd") : ""}
                 onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value ? new Date(e.target.value) : undefined }))}
                 min={formData.startDate ? format(formData.startDate, "yyyy-MM-dd") : undefined}
+                disabled={!canEdit("endDate")}  // ✅ disable based on role
               />
               {errors.endDate && <p className="text-sm text-red-500">{errors.endDate}</p>}
             </div>
@@ -482,7 +484,7 @@ export function TaskModal({
           {!canEditAllFields && (
             <div className="p-3 border border-blue-200 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Developer Role:</strong> You can only edit Status and Assignee fields.
+                You can only edit Status.
               </p>
             </div>
           )}

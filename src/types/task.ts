@@ -34,6 +34,7 @@ export interface User {
   name: string;
   full_name: string;
   role: string;
+  isManager: boolean;
   email: string;
   created_at: string;
   managerId?: string | null;

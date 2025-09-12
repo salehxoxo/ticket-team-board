@@ -124,7 +124,7 @@ export default function Index() {
     }
   }, []);
 
-  const userRole = roles.find(r => r.name === currentUser.role);
+  // const userRole = roles.find(r => r.name === currentUser.role);
 
   // useEffect(() => {
 
@@ -269,7 +269,7 @@ export default function Index() {
   //FOR TASK
 
   const handleCreateTask = () => {
-    if (userRole?.isManager === false) {
+    if (currentUser?.isManager === false) {
       toast({
         title: "Access Denied",
         description: "Only managers and admins can create new tasks.",
@@ -1156,7 +1156,7 @@ export default function Index() {
                 onClose={() => setOpen(false)}
               />
 
-              {userRole?.isManager && (
+              {currentUser?.isManager && (
                 <Button onClick={handleCreateTask} className="gap-2">
                   <Plus className="h-4 w-4" />
                   New Task

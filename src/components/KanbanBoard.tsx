@@ -44,9 +44,10 @@ export function KanbanBoard({
   }, [tasks, columns]);
 
   const canEditTask = (task: Task) => {
-    if (["manager", "admin"].includes(currentUser.role)) return true;
-    if (currentUser.role === "developer") return true;
-    return false;
+    // currentUser.isManager ? true: false;
+    // if (["manager", "admin"].includes(currentUser.role)) return true;
+    // if (currentUser.role === "developer") return true;
+    return true;
   };
 
   const handleDragEnd = (result: DropResult) => {
