@@ -118,7 +118,7 @@ export default function Index() {
 
   // Set current user on component mount
   useEffect(() => {
-    const userString = localStorage.getItem('user');
+    const userString = sessionStorage.getItem('user');
     if (userString) {
       setCurrentUser(JSON.parse(userString));
     }
@@ -328,10 +328,26 @@ export default function Index() {
     setIsTaskModalOpen(true);
   };
 
-  const handleViewTask = (task: Task) => {
+  // const handleViewTask = (task: Task) => {
+  //   const column = statuses.find(c => c.name === task.status);
+  //   navigate(`/task/${task.id}`, { state: { task, column, holidays } }); // Your intended behavior
+  // };
+
+  const handleViewTask = (
+    task: Task,
+    search?: string,
+    statusFilter?: string | "all",
+    priorityFilter?: TaskPriority | "all"
+  ) => {
+    // stash filters before navigating
+    sessionStorage.setItem("taskSearch", search);
+    sessionStorage.setItem("taskStatusFilter", statusFilter);
+    sessionStorage.setItem("taskPriorityFilter", priorityFilter);
+
     const column = statuses.find(c => c.name === task.status);
-    navigate(`/task/${task.id}`, { state: { task, column, holidays } }); // Your intended behavior
+    navigate(`/task/${task.id}`, { state: { task, column, holidays } });
   };
+
 
 
   const handleSaveTask = async (taskData: TaskFormData) => {
@@ -1152,8 +1168,8 @@ export default function Index() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  localStorage.removeItem('token');
-                  localStorage.removeItem("user");
+                  sessionStorage.removeItem('token');
+                  sessionStorage.removeItem("user");
                   window.location.href = '/login';
                 }}
                 className="gap-2"

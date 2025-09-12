@@ -26,7 +26,7 @@ export function TaskSidebar({ currentUser, activeTab, onTabChange, roles }: Task
     { title: "List", value: "list", icon: List },
     // { title: "Stats", value: "stats", icon: BarChart3 },
     { title: "Stats", value: "reports", icon: BarChart3 },
-    { title: "Report", value: "hourlyreport", icon: FileBarChart }
+    { title: "Task Report", value: "hourlyreport", icon: FileBarChart }
   ];
 
   const managerAdminItems = [
@@ -35,7 +35,7 @@ export function TaskSidebar({ currentUser, activeTab, onTabChange, roles }: Task
     { title: "Products", value: "products", icon: Package },
     { title: "Statuses", value: "status", icon: Activity },
     { title: "Roles", value: "roles", icon: Layers },
-    { title: "Full Report", value: "fullreport", icon: Layers },
+    { title: "Full Report", value: "fullreport", icon: FileBarChart },
   ];
 
   const finalItems = [

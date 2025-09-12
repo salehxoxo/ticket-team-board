@@ -14,6 +14,10 @@ import { Footer } from "./components/Footer";
 // localStorage.removeItem("token"); // Remove this line when deploying
 // localStorage.removeItem("user"); // Remove this line when deploying
 // localStorage.removeItem("isloggedin"); // Remove this line when deploying
+// Clear sessionStorage on every app reload during development
+if (import.meta.env.DEV) {
+  sessionStorage.clear();
+}
 
 const queryClient = new QueryClient();
 

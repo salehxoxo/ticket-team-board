@@ -32,7 +32,7 @@ export default function TaskDetails() {
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [isAddingTimeLog, setIsAddingTimeLog] = useState(false);
 
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}') as UserType;
+  const currentUser = JSON.parse(sessionStorage.getItem('user') || '{}') as UserType;
 
   // const statusConfig = {
   //   'todo': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'To Do' },

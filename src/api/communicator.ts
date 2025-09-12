@@ -9,8 +9,8 @@ export interface ApiResponse<T = null> {
 
 export class HttpClient {
     private static async getHeaders() {
-        const token = localStorage.getItem('token');
-        const username = localStorage.getItem('user');
+        const token = sessionStorage.getItem('token');
+        const username = sessionStorage.getItem('user');
 
         return {
             'Content-Type': 'application/json',

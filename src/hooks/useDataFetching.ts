@@ -17,8 +17,8 @@ export const useDataFetching = () => {
     const fetchAllData = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const userString = localStorage.getItem('user');
+            const token = sessionStorage.getItem('token');
+            const userString = sessionStorage.getItem('user');
 
             if (!token || !userString) {
                 throw new Error("User not logged in");

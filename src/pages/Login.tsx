@@ -33,8 +33,8 @@ const Login = () => {
       console.log('Login response:', response);
 
       if (response && !response.isError && response.data?.token) {
-        localStorage.setItem('token', response.data.token); // Store actual token
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        sessionStorage.setItem('token', response.data.token); // Store actual token
+        sessionStorage.setItem('user', JSON.stringify(response.data.user));
 
         setEmail('');
         setPassword('');

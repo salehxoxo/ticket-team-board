@@ -3,8 +3,8 @@ import { Navigate } from "react-router-dom";
 
 
 const PrivateRoute = ({ children }: { children: ReactNode }) => {
-  const token = localStorage.getItem("token");
-  const user = localStorage.getItem("user");
+  const token = sessionStorage.getItem("token");
+  const user = sessionStorage.getItem("user");
   console.log("Token in PrivateRoute:", token);
   console.log("User in PrivateRoute:", user);
 

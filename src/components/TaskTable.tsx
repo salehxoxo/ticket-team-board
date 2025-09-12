@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,13 @@ interface TaskTableProps {
   onEditTask: (task: Task) => void;
   canEdit?: boolean;
   columns: Column[];
-  onView: (task: Task) => void;
+  // onView: (task: Task) => void;
+  onView: (
+    task: Task,
+    search: string,
+    statusFilter: string | "all",
+    priorityFilter: TaskPriority | "all"
+  ) => void;
 }
 
 type SortField = 'name' | 'status' | 'priority' | 'endDate' | 'project';
@@ -67,6 +73,25 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+  useEffect(() => {
+    const savedSearch = sessionStorage.getItem("taskSearch");
+    const savedStatus = sessionStorage.getItem("taskStatusFilter");
+    const savedPriority = sessionStorage.getItem("taskPriorityFilter");
+
+    if (savedSearch || savedStatus || savedPriority) {
+      setSearch(savedSearch || "");
+      setStatusFilter((savedStatus as string | "all") || "all");
+      setPriorityFilter((savedPriority as TaskPriority | "all") || "all");
+
+      // clear so refresh/other tabs start fresh
+      sessionStorage.removeItem("taskSearch");
+      sessionStorage.removeItem("taskStatusFilter");
+      sessionStorage.removeItem("taskPriorityFilter");
+    }
+  }, []);
+
+
 
   const filteredAndSortedTasks = useMemo(() => {
     let filtered = tasks.filter(task => {
@@ -264,9 +289,9 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
                             )} />
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-1">
+                        {/* <p className="text-xs text-muted-foreground line-clamp-1">
                           {task.description}
-                        </p>
+                        </p> */}
                         {/* <Badge variant="outline" className="text-xs">
                           {task.id}
                         </Badge> */}
@@ -333,7 +358,7 @@ export function TaskTable({ tasks, onEditTask, onView, canEdit = true, columns }
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onView(task)}
+                        onClick={() => onView(task, search, statusFilter, priorityFilter)}
                       >
                         <Eye className="h-4 w-4 text-blue-500" />
                       </Button>

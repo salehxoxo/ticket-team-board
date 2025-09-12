@@ -86,8 +86,8 @@ export function ProfileModal({ user, isOpen, onClose }: ProfileModalProps) {
         );
 
         if (confirmed) {
-          localStorage.removeItem('token');
-          localStorage.removeItem("user");
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem("user");
           window.location.href = '/login';
         }
 
