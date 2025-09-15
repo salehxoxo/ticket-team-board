@@ -4,13 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Project, Holiday, Product } from "@/types/task";
-import { calculateEstimatedHours } from "@/lib/business-days";
+import { Holiday, Product } from "@/types/task";
 
 export interface ProductFormData {
   name: string;
@@ -51,12 +45,6 @@ export function ProductModal({ product, isOpen, onClose, onSave, holidays, isCre
     }
   }, [isOpen, product, isCreating]);
 
-//   useEffect(() => {
-//     if (formData.startDate && formData.endDate && formData.endDate >= formData.startDate) {
-//       const estimatedHours = calculateEstimatedHours(formData.startDate, formData.endDate, holidays);
-//       setFormData(prev => ({ ...prev, estimatedHours }));
-//     }
-//   }, [formData.startDate, formData.endDate, holidays]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -69,10 +57,6 @@ export function ProductModal({ product, isOpen, onClose, onSave, holidays, isCre
       newErrors.description = 'Product description is required';
     }
 
-    // if (formData.endDate <= formData.startDate) {
-    //   newErrors.endDate = 'End date must be after start date';
-    // }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -84,12 +68,6 @@ export function ProductModal({ product, isOpen, onClose, onSave, holidays, isCre
     }
   };
 
-//   const handleDateChange = (field: 'startDate' | 'endDate', date: Date | undefined) => {
-//     if (date) {
-//       setFormData(prev => ({ ...prev, [field]: date }));
-//     }
-//   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
@@ -98,7 +76,7 @@ export function ProductModal({ product, isOpen, onClose, onSave, holidays, isCre
             {isCreating ? 'Create New Product' : 'Edit Product'}
           </DialogTitle>
           <DialogDescription>
-            {isCreating 
+            {isCreating
               ? 'Enter the details for the new product.'
               : 'Update the product details.'
             }
@@ -130,82 +108,6 @@ export function ProductModal({ product, isOpen, onClose, onSave, holidays, isCre
             />
             {errors.description && <span className="text-sm text-destructive">{errors.description}</span>}
           </div>
-
-          {/* <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label>Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "justify-start text-left font-normal",
-                      !formData.startDate && "text-muted-foreground"
-                    )}
-                    disabled={isSaving}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.startDate ? format(formData.startDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.startDate}
-                    onSelect={(date) => handleDateChange('startDate', date)}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-              {errors.startDate && <span className="text-sm text-destructive">{errors.startDate}</span>}
-            </div>
-
-            <div className="grid gap-2">
-              <Label>End Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "justify-start text-left font-normal",
-                      !formData.endDate && "text-muted-foreground"
-                    )}
-                    disabled={isSaving}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.endDate ? format(formData.endDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.endDate}
-                    onSelect={(date) => handleDateChange('endDate', date)}
-                    disabled={(date) => date < formData.startDate} // Blocks dates BEFORE start date
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-              {errors.endDate && <span className="text-sm text-destructive">{errors.endDate}</span>}
-            </div>
-          </div> */}
-
-          {/* <div className="grid gap-2">
-            <Label htmlFor="estimatedHours">Estimated Hours</Label>
-            <Input
-              id="estimatedHours"
-              type="number"
-              value={formData.estimatedHours}
-              readOnly
-              className="bg-muted"
-              placeholder="Will be calculated automatically"
-            />
-            <span className="text-sm text-muted-foreground">
-              Calculated based on working days (excluding weekends and holidays): {formData.estimatedHours} hours
-            </span>
-          </div> */}
         </div>
 
         <div className="flex justify-end gap-2">

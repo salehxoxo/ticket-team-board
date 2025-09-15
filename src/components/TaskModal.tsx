@@ -362,8 +362,14 @@ export function TaskModal({
             <Select
               value={formData.assigneeId || 'unassigned'}
               onValueChange={(value) => setFormData(prev => ({ ...prev, assigneeId: value === 'unassigned' ? null : value }))}
-              disabled={!canEdit('assigneeId')}
+              disabled={!canEdit('assigneeId') || (task && currentUser.id !== task.assignorId)}
             >
+              {currentUser.id !== task?.assignorId && (
+                <p className="text-xs text-muted-foreground">
+                  Only the reporter/task creator can edit this field.
+                </p>
+              )}
+
               <SelectTrigger>
                 <SelectValue placeholder="Select assignee..." />
               </SelectTrigger>
@@ -466,7 +472,7 @@ export function TaskModal({
           </div>
 
           {/* Project date validation warning */}
-          {(() => {
+          {/* {(() => {
             const selectedProject = availableProjects.find(p => p.id === formData.projectId);
             if (selectedProject && !isDateRangeWithin(formData.startDate, formData.endDate, selectedProject.startDate, selectedProject.endDate)) {
               return (
@@ -478,7 +484,7 @@ export function TaskModal({
               );
             }
             return null;
-          })()}
+          })()} */}
 
           {/* Role-based permissions notice */}
           {!canEditAllFields && (

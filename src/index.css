@@ -134,3 +134,41 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+
+/* Prevent content from shrinking when sidebar expands */
+.group\/sidebar-wrapper {
+  overflow: visible !important;
+}
+
+.peer {
+  position: absolute !important;
+  z-index: 50;
+}
+
+.peer+main {
+  margin-left: 0 !important;
+  transition: none !important;
+}
+
+/* Ensure sidebar overlays content instead of pushing it */
+[data-sidebar="sidebar"] {
+  position: fixed;
+  height: 100vh;
+  z-index: 40;
+}
+
+/* Adjust for collapsed state */
+[data-state="collapsed"][data-collapsible="icon"] [data-sidebar="sidebar"] {
+  width: var(--sidebar-width-icon) !important;
+}
+
+[data-state="expanded"] [data-sidebar="sidebar"] {
+  width: var(--sidebar-width) !important;
+}
+
+
+/* Add this new rule - pushes content right by sidebar width */
+/* .flex-1 {
+  margin-left: var(--sidebar-width-icon) !important;
+} */

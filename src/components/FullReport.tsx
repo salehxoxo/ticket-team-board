@@ -64,8 +64,7 @@ export default function HourlyReport({ tasks, users, projects }: ReportsProps) {
 
         tasks.forEach((task) => {
             const project = projects.find((p) => p.id === task.projectId);
-            const user = users.find((u) => u.id === task.assigneeId);
-            if (!project || !user) return;
+            if (!project) return;
 
             if (!projectGroups[project.id]) {
                 projectGroups[project.id] = {
@@ -86,29 +85,43 @@ export default function HourlyReport({ tasks, users, projects }: ReportsProps) {
                 );
             });
 
-            const totalHours = taskLogs.reduce((sum, l) => sum + l.hours, 0);
-            // if (totalHours === 0) return;
+            // group logs per userId
+            const logsByUser: Record<string, typeof taskLogs> = {};
+            taskLogs.forEach((log) => {
+                if (!logsByUser[log.userId]) logsByUser[log.userId] = [];
+                logsByUser[log.userId].push(log);
+            });
 
-            // check if user already exists under this project
-            const existingMember = projectGroups[project.id].children!.find(
-                (m) => m.id === `${project.id}-${user.id}`
-            );
+            // add each user who logged time as a child node
+            Object.entries(logsByUser).forEach(([userId, logs]) => {
+                const user = users.find((u) => u.id === userId);
+                if (!user) return;
 
-            if (existingMember) {
-                existingMember.hours = (existingMember.hours || 0) + totalHours;
-            } else {
-                projectGroups[project.id].children!.push({
-                    type: "member",
-                    id: `${project.id}-${user.id}`,
-                    name: user.full_name,
-                    role: user.role, // assuming role field exists
-                    hours: totalHours,
-                });
-            }
+                const totalHours = logs.reduce((sum, l) => sum + l.hours, 0);
+                if (totalHours === 0) return;
+
+                const memberId = `${project.id}-${user.id}`;
+                const existingMember = projectGroups[project.id].children!.find(
+                    (m) => m.id === memberId
+                );
+
+                if (existingMember) {
+                    existingMember.hours = (existingMember.hours || 0) + totalHours;
+                } else {
+                    projectGroups[project.id].children!.push({
+                        type: "member",
+                        id: memberId,
+                        name: user.full_name,
+                        role: user.role, // assuming role field exists
+                        hours: totalHours,
+                    });
+                }
+            });
         });
 
         return Object.values(projectGroups);
     }, [tasks, projects, users, timeLogs, startDate, endDate]);
+
 
     // Filter by search & user
     const filteredData = useMemo(() => {

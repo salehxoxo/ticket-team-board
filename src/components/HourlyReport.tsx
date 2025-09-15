@@ -100,40 +100,42 @@ export default function HourlyReport({ tasks, users, projects, products }: Repor
                 };
 
                 projectTasks.forEach(task => {
-                    const taskUser = users.find(u => u.id === task.assigneeId);
-
-                    // 🔹 Get actual logged hours from timeLogs
-                    // const taskLogs = timeLogs.filter(log => log.taskId === task.id);
-                    // 🔹 Apply date filter here
-                    const formatDateOnly = (d: Date) => d.toISOString().split("T")[0];
-
+                    // group logs per user for this task
                     const taskLogs = timeLogs.filter(log => {
-                        const logDate = formatDateOnly(new Date(log.workDate));
-
+                        const logDate = new Date(log.workDate).toISOString().split("T")[0];
                         return (
                             log.taskId === task.id &&
-                            (!startDate || logDate >= formatDateOnly(startDate)) &&
-                            (!endDate || logDate <= formatDateOnly(endDate))
+                            (!startDate || logDate >= startDate.toISOString().split("T")[0]) &&
+                            (!endDate || logDate <= endDate.toISOString().split("T")[0])
                         );
                     });
 
-                    const actualHours = taskLogs.reduce((sum, log) => sum + log.hours, 0);
+                    // group by userId
+                    const logsByUser: Record<string, typeof taskLogs> = {};
+                    taskLogs.forEach(log => {
+                        if (!logsByUser[log.userId]) logsByUser[log.userId] = [];
+                        logsByUser[log.userId].push(log);
+                    });
 
-                    // if (actualHours === 0) return;
+                    Object.entries(logsByUser).forEach(([userId, logs]) => {
+                        const taskUser = users.find(u => u.id === userId);
 
+                        const actualHours = logs.reduce((sum, log) => sum + log.hours, 0);
 
-                    const taskNode: HierarchyNode = {
-                        type: 'task',
-                        id: task.id,
-                        name: task.name,
-                        data: task,
-                        user: taskUser,
-                        hours: actualHours
-                    };
+                        const taskNode: HierarchyNode = {
+                            type: 'task',
+                            id: `${task.id}-${userId}`, // unique per task+user
+                            name: task.name,
+                            data: task,
+                            user: taskUser,
+                            hours: actualHours
+                        };
 
-                    projectNode.children!.push(taskNode);
-                    projectNode.totalHours! += actualHours;
+                        projectNode.children!.push(taskNode);
+                        projectNode.totalHours! += actualHours;
+                    });
                 });
+
 
                 if (projectNode.children!.length > 0) {
                     productNode.children!.push(projectNode);

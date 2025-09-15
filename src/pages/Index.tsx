@@ -1,20 +1,17 @@
-import { useState, useMemo, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from "react";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { TaskModal } from "@/components/TaskModal";
 import { UserModal, UserFormData } from "@/components/UserModal";
 import { ProjectModal, ProjectFormData } from "@/components/ProjectModal";
 import { ProductModal, ProductFormData } from "@/components/ProductModal";
 import { Reports } from "@/components/Reports";
-import { Task, TaskFormData, User, Project, Product, TaskPriority, UserRole, Holiday, HolidayFormData, Column, Manager } from "@/types/task";
+import { Task, TaskFormData, User, Project, Product, TaskPriority, UserRole, Holiday, HolidayFormData, Column } from "@/types/task";
 import { HolidayModal } from "@/components/HolidayModal";
-import { Plus, BarChart3, Calendar, Users, TrendingUp, UserPlus, Edit, Trash2, FolderPlus, LogOut, Search } from "lucide-react";
+import { Plus, TrendingUp, UserPlus, FolderPlus, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { HttpClient } from "@/api/communicator";
 import { isDateRangeWithin } from "@/lib/business-days";
@@ -30,12 +27,10 @@ import { StatusFormData, StatusModal } from "@/components/StatusModal";
 import { StatusTable } from "@/components/StatusTable";
 import { RoleTable } from "@/components/RoleTable";
 import { RoleFormData, RoleModal } from "@/components/RoleModal";
-import TaskStats from "@/components/TaskStats";
 import { ProductTable } from "@/components/ProductTable";
 import { HolidayTable } from "@/components/HolidayTable";
 import HourlyReport from "@/components/HourlyReport";
 import { useDataFetching } from "@/hooks/useDataFetching";
-import { start } from "repl";
 import FullReport from "@/components/FullReport";
 
 
@@ -44,15 +39,6 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("activeTab") || "kanban";
   });
-
-  // const [tasks, setTasks] = useState<Task[]>([]);
-  // const [users, setUsers] = useState<User[]>([]);
-  // const [projects, setProjects] = useState<Project[]>([]);
-  // const [statuses, setStatuses] = useState<Column[]>([]);
-  // const [products, setProducts] = useState<Product[]>([]);
-  // const [roles, setRoles] = useState<UserRole[]>([]);
-  // const [holidays, setHolidays] = useState<Holiday[]>([]);
-  // const [managers, setManagers] = useState<Manager[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -88,10 +74,6 @@ export default function Index() {
     refetch
   } = useDataFetching()
 
-  // const [taskSearch, setTaskSearch] = useState("");
-  // const [userSearch, setUserSearch] = useState("");
-  // const [projectSearch, setProjectSearch] = useState("");
-  // const [productSearch, setProductSearch] = useState("");
   const [savingTask, setSavingTask] = useState(false);
   const [savingUser, setSavingUser] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
@@ -123,141 +105,6 @@ export default function Index() {
       setCurrentUser(JSON.parse(userString));
     }
   }, []);
-
-  // const userRole = roles.find(r => r.name === currentUser.role);
-
-  // useEffect(() => {
-
-  //   const fetchData = async () => {
-  //     try {
-  //       const token = localStorage.getItem('token');
-  //       const userString = localStorage.getItem('user');
-
-  //       if (!token || !userString) {
-  //         console.warn("User not logged in");
-  //         return;
-  //       }
-
-  //       const user = JSON.parse(userString);
-  //       setCurrentUser(user);
-
-
-  //       // Fetch tasks by user ID
-  //       const taskResponse = await HttpClient.GET<Task[]>(`/api/Tasks/user/${user.id}`);
-  //       if (!taskResponse.isError && taskResponse.data) {
-  //         const convertedTasks = taskResponse.data.map(task => ({
-  //           ...task,
-  //           startDate: new Date(task.startDate),
-  //           endDate: new Date(task.endDate),
-  //           created_at: new Date(task.created_at),
-  //           updated_at: new Date(task.updated_at),
-  //           project_start: new Date(task.project_start),
-  //           project_end: new Date(task.project_end)
-  //         }));
-  //         setTasks(convertedTasks);
-  //       } else {
-  //         console.error("Failed to fetch tasks:", taskResponse.message);
-  //       }
-
-
-  //       // Fetch all users
-  //       const userResponse = await HttpClient.GET<User[]>('/api/User');
-  //       if (!userResponse.isError && userResponse.data) {
-  //         setUsers(userResponse.data);
-  //       } else {
-  //         console.error("Failed to fetch users:", userResponse.message);
-  //       }
-
-
-  //       // Fetch all projects
-  //       const projectResponse = await HttpClient.GET<Project[]>('/api/Project');
-  //       if (!projectResponse.isError && projectResponse.data) {
-  //         const convertedProjects = projectResponse.data.map(project => ({
-  //           ...project,
-  //           startDate: new Date(project.startDate),
-  //           endDate: new Date(project.endDate),
-  //           createdAt: new Date(project.createdAt)
-  //         }));
-  //         setProjects(convertedProjects);
-  //       } else {
-  //         console.error("Failed to fetch projects:", projectResponse.message);
-  //       }
-
-  //       // Fetch all roles
-  //       const roleResponse = await HttpClient.GET<UserRole[]>('/api/Role');
-  //       if (!roleResponse.isError && roleResponse.data) {
-  //         setRoles(roleResponse.data);
-  //       } else {
-  //         console.error("Failed to fetch roles:", roleResponse.message);
-  //       }
-
-  //       // Fetch all holidays
-  //       const holidayResponse = await HttpClient.GET<Holiday[]>('/api/Holiday');
-  //       if (!holidayResponse.isError && holidayResponse.data) {
-  //         const convertedHolidays = holidayResponse.data.map(holiday => ({
-  //           ...holiday,
-  //           date: new Date(holiday.date),
-  //         }));
-  //         setHolidays(convertedHolidays);
-  //       } else {
-  //         console.error("Failed to fetch holidays:", holidayResponse.message);
-  //       }
-
-
-  //       // Fetch all products
-  //       const productResponse = await HttpClient.GET<Product[]>('/api/Product');
-  //       if (!productResponse.isError && productResponse.data) {
-  //         setProducts(productResponse.data);
-  //       } else {
-  //         console.error("Failed to fetch products:", productResponse.message);
-  //       }
-
-
-  //       //fetch all statuses
-  //       const statusResponse = await HttpClient.GET<Column[]>("/api/TasksStatus");
-  //       if (!statusResponse.isError && statusResponse.data) {
-  //         setStatuses(statusResponse.data);
-  //       } else {
-  //         console.error("Failed to fetch task statuses:", statusResponse.message);
-  //       }
-
-  //       //fetch managers
-  //       const managerResponse = await HttpClient.GET<Manager[]>("/api/User/managers");
-  //       if (!managerResponse.isError && managerResponse.data) {
-  //         setManagers(managerResponse.data);
-  //       } else {
-  //         console.error("Failed to fetch managers:", managerResponse.message);
-  //       }
-
-  //     } catch (err) {
-  //       console.error("Error fetching data:", err);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [refreshKey]);
-
-
-  // const taskStats = useMemo(() => {
-  //   const total = tasks.length;
-  //   const byStatus = tasks.reduce((acc, task) => {
-  //     acc[task.status] = (acc[task.status] || 0) + 1;
-  //     return acc;
-  //   }, {} as Record<string, number>);
-
-  //   const byPriority = tasks.reduce((acc, task) => {
-  //     acc[task.priority] = (acc[task.priority] || 0) + 1;
-  //     return acc;
-  //   }, {} as Record<string, number>);
-
-  //   return {
-  //     total,
-  //     byStatus,
-  //     byPriority,
-  //     assigned: tasks.filter(t => t.assignee).length,
-  //     unassigned: tasks.filter(t => !t.assignee).length
-  //   };
-  // }, [tasks]);
 
   const priorityMap: Record<TaskPriority, number> = {
     'low': 1,
@@ -328,132 +175,154 @@ export default function Index() {
     setIsTaskModalOpen(true);
   };
 
-  // const handleViewTask = (task: Task) => {
-  //   const column = statuses.find(c => c.name === task.status);
-  //   navigate(`/task/${task.id}`, { state: { task, column, holidays } }); // Your intended behavior
-  // };
-
   const handleViewTask = (
     task: Task,
     search?: string,
     statusFilter?: string | "all",
     priorityFilter?: TaskPriority | "all"
   ) => {
-    // stash filters before navigating
-    // if(search || statusFilter || !priorityFilter) {
     if (search !== undefined) {
       sessionStorage.setItem("taskSearch", search);
       sessionStorage.setItem("taskStatusFilter", statusFilter);
       sessionStorage.setItem("taskPriorityFilter", priorityFilter);
     }
-
-    // }
     const column = statuses.find(c => c.name === task.status);
     navigate(`/task/${task.id}`, { state: { task, column, holidays } });
   };
 
 
 
+  // const handleSaveTask = async (taskData: TaskFormData) => {
+
+  //   console.log("handleSaveTask");
+
+  //   if (isCreatingTask) {
+  //     // Creating a new task
+
+  //     const newTask = {
+  //       title: taskData.name,
+  //       description: taskData.description,
+  //       status_Id: statuses.find((col) => col.name === taskData.status)?.id,
+  //       priority_Id: priorityMap[taskData.priority],
+  //       project_Id: taskData.projectId,
+  //       assignor_Id: currentUser.id, // the one creating the task
+  //       assignee_Id: taskData.assigneeId,
+  //       startDate: taskData.startDate,
+  //       endDate: taskData.endDate,
+  //       estimatedHours: taskData.estimatedHours,
+  //     };
+
+
+  //     const response = await HttpClient.POST<Task>('/api/Tasks', newTask);
+
+  //     if (!response.isError && response.data) {
+  //       const createdTask = {
+  //         ...response.data,
+  //         startDate: new Date(response.data.startDate),
+  //         endDate: new Date(response.data.endDate),
+  //         created_at: new Date(response.data.created_at),
+  //         updated_at: new Date(response.data.updated_at),
+  //         project_start: new Date(response.data.project_start),
+  //         project_end: new Date(response.data.project_end)
+  //       };
+
+  //       setTasks(prev => [...prev, createdTask]); // No TS error here
+  //       toast({
+  //         title: "Task created successfully",
+  //         description: `"${newTask.title}" has been created.`,
+  //       })
+  //     };
+  //   } else if (selectedTask) {
+  //     console.log("Editing existing task");
+
+
+  //     const updatedTask = {
+  //       id: selectedTask.id,
+  //       title: taskData.name,
+  //       description: taskData.description,
+  //       status_Id: statuses.find((col) => col.name === taskData.status)?.id,
+  //       priority_Id: priorityMap[taskData.priority],
+  //       project_Id: taskData.projectId,
+  //       assignee_Id: taskData.assigneeId,
+  //       startDate: taskData.startDate,
+  //       endDate: taskData.endDate,
+  //       estimatedHours: taskData.estimatedHours,
+  //     };
+  //     const response = await HttpClient.PUT<Task>(`/api/Tasks/${selectedTask.id}`, updatedTask);
+
+  //     if (!response.isError && response.data) {
+  //       const updateTask = {
+  //         ...response.data,
+  //         startDate: new Date(response.data.startDate),
+  //         endDate: new Date(response.data.endDate),
+  //         created_at: new Date(response.data.created_at),
+  //         updated_at: new Date(response.data.updated_at),
+  //         project_start: new Date(response.data.project_start),
+  //         project_end: new Date(response.data.project_end)
+  //       };
+  //       setTasks(prev =>
+  //         prev.map(task => task.id === updateTask.id ? updateTask : task)
+  //       );
+  //       toast({
+  //         title: "Task updated successfully",
+  //         description: `"${updatedTask.title}" has been updated.`,
+  //       });
+  //     }
+  //   }
+  //   setIsTaskModalOpen(false);
+  //   setSelectedTask(null);
+  //   setIsCreatingTask(false);
+  // };
+
   const handleSaveTask = async (taskData: TaskFormData) => {
+    const isCreate = isCreatingTask;
 
-    console.log("handleSaveTask");
+    const taskPayload: any = {
+      ...(isCreate ? { assignor_Id: currentUser.id } : { id: selectedTask?.id }),
+      title: taskData.name,
+      description: taskData.description,
+      status_Id: statuses.find((col) => col.name === taskData.status)?.id,
+      priority_Id: priorityMap[taskData.priority],
+      project_Id: taskData.projectId,
+      assignee_Id: taskData.assigneeId,
+      startDate: taskData.startDate,
+      endDate: taskData.endDate,
+      estimatedHours: taskData.estimatedHours,
+    };
 
-    // Date validation
-    const selectedProject = projects.find(p => p.id === taskData.projectId);
-    if (
-      selectedProject &&
-      !isDateRangeWithin(
-        taskData.startDate,
-        taskData.endDate,
-        selectedProject.startDate,
-        selectedProject.endDate
-      )
-    ) {
+    const response = isCreate
+      ? await HttpClient.POST<Task>("/api/Tasks", taskPayload)
+      : await HttpClient.PUT<Task>(`/api/Tasks/${selectedTask?.id}`, taskPayload);
+
+    if (!response.isError && response.data) {
+      const normalized = {
+        ...response.data,
+        startDate: new Date(response.data.startDate),
+        endDate: new Date(response.data.endDate),
+        created_at: new Date(response.data.created_at),
+        updated_at: new Date(response.data.updated_at),
+        project_start: new Date(response.data.project_start),
+        project_end: new Date(response.data.project_end),
+      };
+
+      setTasks(prev =>
+        isCreate
+          ? [...prev, normalized]
+          : prev.map(task => (task.id === normalized.id ? normalized : task))
+      );
+
       toast({
-        title: "Invalid task dates",
-        description: `Task dates must be within project range (${format(selectedProject.startDate, "PPP")} - ${format(selectedProject.endDate, "PPP")})`,
-        variant: "destructive",
+        title: isCreate ? "Task created successfully" : "Task updated successfully",
+        description: `"${taskPayload.title}" has been ${isCreate ? "created" : "updated"}.`,
       });
-      return;
     }
 
-    if (isCreatingTask) {
-      // Creating a new task
-
-      const newTask = {
-        title: taskData.name,
-        description: taskData.description,
-        status_Id: statuses.find((col) => col.name === taskData.status)?.id,
-        priority_Id: priorityMap[taskData.priority],
-        project_Id: taskData.projectId,
-        assignor_Id: currentUser.id, // the one creating the task
-        assignee_Id: taskData.assigneeId,
-        startDate: taskData.startDate,
-        endDate: taskData.endDate,
-        estimatedHours: taskData.estimatedHours,
-      };
-
-
-      const response = await HttpClient.POST<Task>('/api/Tasks', newTask);
-
-      if (!response.isError && response.data) {
-        const createdTask = {
-          ...response.data,
-          startDate: new Date(response.data.startDate),
-          endDate: new Date(response.data.endDate),
-          created_at: new Date(response.data.created_at),
-          updated_at: new Date(response.data.updated_at),
-          project_start: new Date(response.data.project_start),
-          project_end: new Date(response.data.project_end)
-        };
-
-        setTasks(prev => [...prev, createdTask]); // No TS error here
-        toast({
-          title: "Task created successfully",
-          description: `"${newTask.title}" has been created.`,
-        })
-      };
-    } else if (selectedTask) {
-      console.log("Editing existing task");
-
-
-      const updatedTask = {
-        id: selectedTask.id,
-        title: taskData.name,
-        description: taskData.description,
-        status_Id: statuses.find((col) => col.name === taskData.status)?.id,
-        priority_Id: priorityMap[taskData.priority],
-        project_Id: taskData.projectId,
-        assignee_Id: taskData.assigneeId,
-        startDate: taskData.startDate,
-        endDate: taskData.endDate,
-        estimatedHours: taskData.estimatedHours,
-      };
-      const response = await HttpClient.PUT<Task>(`/api/Tasks/${selectedTask.id}`, updatedTask);
-
-      if (!response.isError && response.data) {
-        const updateTask = {
-          ...response.data,
-          startDate: new Date(response.data.startDate),
-          endDate: new Date(response.data.endDate),
-          created_at: new Date(response.data.created_at),
-          updated_at: new Date(response.data.updated_at),
-          project_start: new Date(response.data.project_start),
-          project_end: new Date(response.data.project_end)
-        };
-        setTasks(prev =>
-          prev.map(task => task.id === updateTask.id ? updateTask : task)
-        );
-        toast({
-          title: "Task updated successfully",
-          description: `"${updatedTask.title}" has been updated.`,
-        });
-      }
-    }
     setIsTaskModalOpen(false);
     setSelectedTask(null);
     setIsCreatingTask(false);
   };
+
+
 
 
   //FOR USER
@@ -539,7 +408,7 @@ export default function Index() {
       }
     }
 
-    setRefreshKey(old => old + 1); // Trigger data refresh
+    // setRefreshKey(old => old + 1); // Trigger data refresh
     refetch() // Refetch data to get updated users
 
     // Cleanup
@@ -565,17 +434,6 @@ export default function Index() {
   const handleDeleteProject = async (project: Project) => {
 
     console.log("handleDeleteProject");
-    // Check if project has tasks
-    // const projectTasks = tasks.filter(task => task.projectId === project.id);
-    // if (projectTasks.length > 0) {
-    //   toast({
-    //     title: "Cannot delete project",
-    //     description: `This project has ${projectTasks.length} task(s). Please reassign or delete them first.`,
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
-
 
     const response = await HttpClient.DELETE<Project>(`/api/Project/${project.id}`);
 
@@ -1120,7 +978,7 @@ export default function Index() {
 
   return (
 
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pl-5 md:pl-8 lg:pl-10">
       <header className="border-b">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
@@ -1226,11 +1084,6 @@ export default function Index() {
                     columns={statuses}
                   />
                 </TabsContent>
-
-
-                {/* <TabsContent value="stats" className="space-y-4">
-                  <TaskStats taskStats={taskStats} />
-                </TabsContent> */}
 
                 <TabsContent value="reports" className="space-y-4">
                   <Reports
