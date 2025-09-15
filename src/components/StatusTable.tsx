@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Edit, Trash2, GripVertical } from "lucide-react";
-import { Column } from "@/types/task"; // <-- your Status type
+import { Column } from "@/types/task";
 import {
   DragDropContext,
   Droppable,

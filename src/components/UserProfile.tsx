@@ -9,10 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { X, Lock, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-// import { toast } from "sonner";
 import { User } from "@/types/task";
 import { HttpClient } from "@/api/communicator";
-// import { toast } from "@/components/ui/use-toast"
 import { useToast } from "@/hooks/use-toast";
 
 interface PasswordFormData {

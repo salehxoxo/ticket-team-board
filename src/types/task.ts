@@ -9,7 +9,7 @@ export interface Column {
   color: string; // e.g., "bg-blue-500"
   sortOrder: number;
 }
-// export type UserRole = 'admin' | 'manager' | 'developer';
+
 
 export interface UserRole {
   id: number;
@@ -21,13 +21,6 @@ export interface Manager {
   managerId: string;
   managerName: string;
 }
-
-// export interface User {
-//   id: string;
-//   name: string;
-//   role: UserRole;
-//   email: string;
-// }
 
 export interface User {
   id: string;
@@ -58,18 +51,6 @@ export interface Product {
   description: string;
 }
 
-// export interface Task {
-//   id: string;
-//   name: string;
-//   description: string;
-//   status: TaskStatus;
-//   priority: TaskPriority;
-//   reporter: User;
-//   assignee: User | null;
-//   project: Project;
-//   createdAt: Date;
-//   updatedAt: Date;
-// }
 
 export interface Task {
   id: string;
@@ -145,6 +126,6 @@ export interface TimeLog {
   userName: string;
   description: string;
   hours: number;
-  workDate: Date;   // <-- new field (actual work day)
+  workDate: Date;
   loggedAt: Date;
 }

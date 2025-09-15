@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, ArrowUpDown, Edit, Trash2 } from "lucide-react";
-import { UserRole } from "@/types/task"; // <-- your Role type
+import { UserRole } from "@/types/task";
 
 interface RoleTableProps {
   roles: UserRole[];

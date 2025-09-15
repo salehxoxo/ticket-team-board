@@ -8,14 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Task, TaskFormData, TaskPriority, User, UserRole, Project, Holiday, KanbanColumn, Column } from "@/types/task";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import { Save, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isDateRangeWithin, calculateEstimatedHours, calculateBusinessDays } from "@/lib/business-days";
-import { Portal } from "@radix-ui/react-portal";
 
 
 interface TaskModalProps {
@@ -167,14 +163,6 @@ export function TaskModal({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-
-  // const handleSave = () => {
-  //   if (!validateForm()) return;
-  //   onSave(formData);
-  //   onClose();
-  // };
-
 
   const handleSave = () => {
     if (!validateForm()) return;
@@ -440,21 +428,6 @@ export function TaskModal({
               {errors.endDate && <p className="text-sm text-red-500">{errors.endDate}</p>}
             </div>
 
-
-            {/* <div className="space-y-2">
-              <Label htmlFor="hours" className="text-sm font-medium">Hours</Label>
-              <Input
-                id="hours"
-                type="number"
-                min="0.5"
-                step="0.5"
-                value={formData.estimatedHours}
-                onChange={(e) => setFormData(prev => ({ ...prev, hours: parseFloat(e.target.value) || 0 }))}
-                disabled={!canEdit('estimatedHours')}
-                placeholder="Enter hours"
-              />
-            </div> */}
-
             <div className="space-y-2">
               <Label htmlFor="estimatedHours" className="text-sm font-medium">Estimated Hours</Label>
               <Input
@@ -472,7 +445,7 @@ export function TaskModal({
           </div>
 
           {/* Project date validation warning */}
-          {/* {(() => {
+          {(() => {
             const selectedProject = availableProjects.find(p => p.id === formData.projectId);
             if (selectedProject && !isDateRangeWithin(formData.startDate, formData.endDate, selectedProject.startDate, selectedProject.endDate)) {
               return (
@@ -484,7 +457,7 @@ export function TaskModal({
               );
             }
             return null;
-          })()} */}
+          })()}
 
           {/* Role-based permissions notice */}
           {!canEditAllFields && (

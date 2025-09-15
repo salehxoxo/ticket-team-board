@@ -14,8 +14,6 @@ import { HolidayModal } from "@/components/HolidayModal";
 import { Plus, TrendingUp, UserPlus, FolderPlus, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { HttpClient } from "@/api/communicator";
-import { isDateRangeWithin } from "@/lib/business-days";
-import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { TaskSidebar } from "@/components/Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -190,89 +188,6 @@ export default function Index() {
     navigate(`/task/${task.id}`, { state: { task, column, holidays } });
   };
 
-
-
-  // const handleSaveTask = async (taskData: TaskFormData) => {
-
-  //   console.log("handleSaveTask");
-
-  //   if (isCreatingTask) {
-  //     // Creating a new task
-
-  //     const newTask = {
-  //       title: taskData.name,
-  //       description: taskData.description,
-  //       status_Id: statuses.find((col) => col.name === taskData.status)?.id,
-  //       priority_Id: priorityMap[taskData.priority],
-  //       project_Id: taskData.projectId,
-  //       assignor_Id: currentUser.id, // the one creating the task
-  //       assignee_Id: taskData.assigneeId,
-  //       startDate: taskData.startDate,
-  //       endDate: taskData.endDate,
-  //       estimatedHours: taskData.estimatedHours,
-  //     };
-
-
-  //     const response = await HttpClient.POST<Task>('/api/Tasks', newTask);
-
-  //     if (!response.isError && response.data) {
-  //       const createdTask = {
-  //         ...response.data,
-  //         startDate: new Date(response.data.startDate),
-  //         endDate: new Date(response.data.endDate),
-  //         created_at: new Date(response.data.created_at),
-  //         updated_at: new Date(response.data.updated_at),
-  //         project_start: new Date(response.data.project_start),
-  //         project_end: new Date(response.data.project_end)
-  //       };
-
-  //       setTasks(prev => [...prev, createdTask]); // No TS error here
-  //       toast({
-  //         title: "Task created successfully",
-  //         description: `"${newTask.title}" has been created.`,
-  //       })
-  //     };
-  //   } else if (selectedTask) {
-  //     console.log("Editing existing task");
-
-
-  //     const updatedTask = {
-  //       id: selectedTask.id,
-  //       title: taskData.name,
-  //       description: taskData.description,
-  //       status_Id: statuses.find((col) => col.name === taskData.status)?.id,
-  //       priority_Id: priorityMap[taskData.priority],
-  //       project_Id: taskData.projectId,
-  //       assignee_Id: taskData.assigneeId,
-  //       startDate: taskData.startDate,
-  //       endDate: taskData.endDate,
-  //       estimatedHours: taskData.estimatedHours,
-  //     };
-  //     const response = await HttpClient.PUT<Task>(`/api/Tasks/${selectedTask.id}`, updatedTask);
-
-  //     if (!response.isError && response.data) {
-  //       const updateTask = {
-  //         ...response.data,
-  //         startDate: new Date(response.data.startDate),
-  //         endDate: new Date(response.data.endDate),
-  //         created_at: new Date(response.data.created_at),
-  //         updated_at: new Date(response.data.updated_at),
-  //         project_start: new Date(response.data.project_start),
-  //         project_end: new Date(response.data.project_end)
-  //       };
-  //       setTasks(prev =>
-  //         prev.map(task => task.id === updateTask.id ? updateTask : task)
-  //       );
-  //       toast({
-  //         title: "Task updated successfully",
-  //         description: `"${updatedTask.title}" has been updated.`,
-  //       });
-  //     }
-  //   }
-  //   setIsTaskModalOpen(false);
-  //   setSelectedTask(null);
-  //   setIsCreatingTask(false);
-  // };
 
   const handleSaveTask = async (taskData: TaskFormData) => {
     const isCreate = isCreatingTask;

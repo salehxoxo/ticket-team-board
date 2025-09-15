@@ -298,60 +298,6 @@ export const Reports = ({ tasks, users }: ReportsProps) => {
         </Card>
 
       </div>
-
-      {/* Team Performance Table */}
-      {/* <Card>
-        <CardHeader>
-          <CardTitle>Team Performance Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {users.map(user => {
-              const userTasks = tasks.filter(task => task.assignee?.id === user.id);
-              const completedTasks = userTasks.filter(task => task.status === 'done').length;
-              const inProgressTasks = userTasks.filter(task => task.status === 'in-progress').length;
-              const userCompletionRate = userTasks.length > 0 ? Math.round((completedTasks / userTasks.length) * 100) : 0;
-
-              return (
-                <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {user.name.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.role}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground">Total</p>
-                      <p className="font-medium">{userTasks.length}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground">Completed</p>
-                      <p className="font-medium">{completedTasks}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground">In Progress</p>
-                      <p className="font-medium">{inProgressTasks}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground">Rate</p>
-                      <Badge variant={userCompletionRate >= 70 ? "default" : "secondary"}>
-                        {userCompletionRate}%
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card> */}
     </div>
   );
 };
