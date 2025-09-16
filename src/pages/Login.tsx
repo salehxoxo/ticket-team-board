@@ -89,7 +89,7 @@ const Login = () => {
                 <BarChart3 className="h-5 w-5 text-status-in-progress" />
               </div>
               <div>
-                <h3 className="font-semibold">Advanced Analytics</h3>
+                <h3 className="font-semibold">Analytics</h3>
                 <p className="text-sm text-muted-foreground">Track project progress with detailed reports and insights</p>
               </div>
             </div>
@@ -104,7 +104,7 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
+            {/* <div className="flex items-start gap-4">
               <div className="p-2 rounded-md bg-status-done/10 border border-status-done/20">
                 <Shield className="h-5 w-5 text-status-done" />
               </div>
@@ -112,7 +112,7 @@ const Login = () => {
                 <h3 className="font-semibold">Secure & Reliable</h3>
                 <p className="text-sm text-muted-foreground">Enterprise-grade security for your sensitive data</p>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
